@@ -1,0 +1,4 @@
+.aws-sam
+.DS_Store
+dist
+node_modules
