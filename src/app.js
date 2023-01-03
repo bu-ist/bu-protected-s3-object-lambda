@@ -19,7 +19,7 @@ exports.handler = async (event) => {
   const { outputRoute, outputToken, inputS3Url } = getObjectContext;
 
   // Get image stored in S3 accessible via the presigned URL `inputS3Url`.
-  const { data } = await axios.get(inputS3Url, { responseType: "arraybuffer" });
+  const { data, headers } = await axios.get(inputS3Url, { responseType: "arraybuffer" });
 
   // Resize the image
   // Height is optional, will automatically maintain aspect ratio.
@@ -31,6 +31,7 @@ exports.handler = async (event) => {
     RequestRoute: outputRoute,
     RequestToken: outputToken,
     Body: resized,
+    ContentType: headers["content-type"],
   };
   await s3.writeGetObjectResponse(params).promise();
 
