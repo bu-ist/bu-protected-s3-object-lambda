@@ -67,7 +67,9 @@ Resources:
       CodeUri: src/
       Handler: app.handler
       Runtime: nodejs12.x
+      # We wouldn't leave these defaults this high in production.
       MemorySize: 2048
+      Timeout: 30
       # The function needs permission to call back to the S3 Object Lambda Access Point with the WriteGetObjectResponse.
       Policies:
         - S3CrudPolicy:
