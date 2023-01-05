@@ -1,0 +1,14 @@
+version = 0.1
+[default.global.parameters]
+stack_name = "jaydub-s3-object-lambda"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-e83npxfvn4p0"
+s3_prefix = "jaydub-s3-object-lambda"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM"
+disable_rollback = true
+image_repositories = []
+
+[default.sync.parameters]
+capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND"
+disable_rollback = true
+
