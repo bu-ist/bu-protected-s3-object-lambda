@@ -41,9 +41,8 @@ exports.handler = async (event) => {
     params.ContentType = headers["content-type"];
   } else {
     // If the user is not authorized, return a 403 Access Denied response.
-    params.Body = 'Access Denied';
+    params.ErrorMessage = 'Access Denied';
     params.StatusCode = 403;
-    params.ContentType = 'text/plain';
   }
 
   await s3.writeGetObjectResponse(params).promise();
