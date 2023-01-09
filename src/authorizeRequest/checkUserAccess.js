@@ -1,20 +1,11 @@
-function checkUserAccess(users, affiliations, entitlements, headers) {
-    // Get the username from the headers.
-    let userName = '';
-    if ('X-Bu-Shib-Username' in headers) {
-      userName = headers['X-Bu-Shib-Username'];
-    }
-  
-    let userAffiliation = '';
-    if ('X-Bu-Shib-Primary-Affiliation' in headers) {
-      userAffiliation = headers['X-Bu-Shib-Primary-Affiliation'];
-    }
-  
-    let userEntitlements = [];
-    if ('X-Bu-Shib-Entitlement' in headers) {
-      userEntitlements = headers['X-Bu-Shib-Entitlement'].split(';');
-    }
-  
+function checkUserAccess(users, affiliations, entitlements, headers) {  
+    // Destructure the header object to get the shib attributes, with defaults.
+    const {
+      'X-Bu-Shib-Username': userName = '',
+      'X-Bu-Shib-Primary-Affiliation': userAffiliation = '',
+      'X-Bu-Shib-Entitlement': userEntitlements = [],
+    } = headers;
+
     // If the user is in the list of users, allow access
     const userAllowed = users.includes(userName);
   
