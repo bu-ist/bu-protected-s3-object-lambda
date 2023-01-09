@@ -1,10 +1,13 @@
-function checkUserAccess(users, affiliations, entitlements, headers) {  
+function checkUserAccess(rules, headers) {  
     // Destructure the header object to get the shib attributes, with defaults.
     const {
       'X-Bu-Shib-Username': userName = '',
       'X-Bu-Shib-Primary-Affiliation': userAffiliation = '',
       'X-Bu-Shib-Entitlement': userEntitlements = [],
     } = headers;
+
+    // Unpack the rules, with defaults.
+    const { users = [], states: affiliations = [], entitlements = [] } = rules;
 
     // If the user is in the list of users, allow access
     const userAllowed = users.includes(userName);

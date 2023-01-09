@@ -49,10 +49,10 @@ async function authorizeRequest(userRequest) {
     }
     
     // Parse the rules.
-    const { users = [], states: affiliations = [], entitlements = [] } = JSON.parse(Item.rules);
+    const rules = JSON.parse(Item.rules);
 
     // Apply the user rules.
-    const allowed = checkUserAccess(users, affiliations, entitlements, headers);
+    const allowed = checkUserAccess(rules, headers);
 
     return allowed;
 }
