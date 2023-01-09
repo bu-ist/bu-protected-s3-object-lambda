@@ -16,7 +16,7 @@ function checkUserAccess(users, affiliations, entitlements, headers) {
     const entitlementsIntersection = entitlements.filter(x => userEntitlements.includes(x));
     const entitlementsAllowed = entitlementsIntersection.length > 0;
   
-    // If the user is allowed by user list, status, or entitlement, allow return true to allow the request.
+    // If the user is allowed by user list, status, or entitlement, return true to allow the request.
     return userAllowed || affiliationAllowed || entitlementsAllowed;
   }
 
