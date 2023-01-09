@@ -20,17 +20,17 @@ async function authorizeRequest(userRequest) {
         convertResponseTypes: false
     });
 
+    const { 'X-Bu-Shib-Username': userName = '' } = headers;
+
     // Get the group name from the uri, it is the segment after the "/__restricted/" segment.
     // Should probably sanitize the path segments here, to only valid url characters just in case.
     const pathSegments = url.split('/');
     const groupName = pathSegments[pathSegments.indexOf('__restricted') + 1];
 
     // Special handling for the entire-bu-community group, which only requires a valid BU login.
-    if (groupName === 'entire-bu-community') {
-        // This should be more elegant, but it checks for a non-empty shibboleth username header.
-        const hasShibUsername = ('X-Bu-Shib-Username' in headers) && headers['X-Bu-Shib-Username'] !== '';
-
-        return hasShibUsername;
+    if (groupName === 'entire-bu-community' && userName !== '') {
+        // If there is a valid BU login, allow access.
+        return true;
     }
     
     // Get the dynamodb table name from the environment.
