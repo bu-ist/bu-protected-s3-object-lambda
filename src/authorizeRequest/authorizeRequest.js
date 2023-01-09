@@ -6,12 +6,6 @@ async function authorizeRequest(userRequest) {
     // Check if the user is authorized to access the object.
     const { url, headers } = userRequest;
 
-    if  (!url.includes('__restricted')) {
-        // Unrestricted items are always allowed.
-        // Will need to account for whole site protections here.
-        return true;
-    }
-
     // Instantiate a DynamoDB client.
     const dynamoDb = new DynamoDB.DocumentClient({
         apiVersion: '2012-08-10',
