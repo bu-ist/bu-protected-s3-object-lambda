@@ -18,7 +18,10 @@ exports.handler = async (event) => {
   const { outputRoute, outputToken, inputS3Url } = getObjectContext;
 
   // Get image stored in S3 accessible via the presigned URL `inputS3Url`.
-  const { data, headers } = await axios.get(inputS3Url, { responseType: "arraybuffer" });
+  const { data, headers, status } = await axios.get(inputS3Url, {
+    responseType: "arraybuffer",
+    validateStatus: (status) => status < 500, // Reject only if the status code is greater than or equal to 500
+  });
 
   // Resize the image
   // Height is optional, will automatically maintain aspect ratio.
@@ -31,9 +34,15 @@ exports.handler = async (event) => {
     RequestRoute: outputRoute,
     RequestToken: outputToken,
   };
-
-  // Three output options: pubic, authorized, or denied.
   
+  // If the image is not found, return a 404 Not Found response.
+  if (status === 404) {
+    params.ErrorMessage = 'Not Found';
+    params.StatusCode = 404;
+    await s3.writeGetObjectResponse(params).promise();
+    return { statusCode: 200 };
+  }
+
   // Unrestricted items are always allowed, and should be sent with a cache control header to tell CloudFront to cache the image.
   // Will need to account for whole site protections here.
   const isPublic = !userRequest.url.includes('__restricted');
