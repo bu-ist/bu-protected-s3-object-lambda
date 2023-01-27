@@ -7,7 +7,7 @@ const { authorizeRequest } = require('./authorizeRequest/authorizeRequest.js');
 
 const s3 = new S3();
 
-const underlyingOriginalBucket = process.env.UNDERLYING_ORIGINAL_BUCKET;
+const originalBucket = process.env.ORIGINAL_BUCKET;
 
 exports.handler = async (event) => {
   // Output the event details to CloudWatch Logs.
@@ -55,7 +55,7 @@ exports.handler = async (event) => {
     const height = parseInt( sizeMatch[2], 10 );
 
     // Get the original image data from S3, through the underlying bucket not the access point.
-    const data = await s3.getObject({ Bucket: underlyingOriginalBucket, Key: s3Key }).promise();
+    const data = await s3.getObject({ Bucket: originalBucket, Key: s3Key }).promise();
     
     // Resize the image data with sharp.
     const resized = await sharp(data.Body).resize({ width: width, height: height }).withMetadata();
@@ -68,7 +68,7 @@ exports.handler = async (event) => {
 
     // Save the resized image to S3, next to the original image.
     await s3.putObject({ 
-      Bucket: underlyingOriginalBucket,
+      Bucket: originalBucket,
       Key: `${s3KeyWithoutExtension}-${width}x${height}.${sizeMatch[3]}`,
       Body: resizedBuffer,
       ContentType: data.ContentType,
