@@ -21,6 +21,12 @@ exports.handler = async (event) => {
   const { userRequest, getObjectContext } = event;
   const { outputRoute, outputToken, inputS3Url } = getObjectContext;
 
+  // Create the parameters for the WriteGetObjectResponse request.
+  const params = {
+    RequestRoute: outputRoute,
+    RequestToken: outputToken,
+  };
+
   // Check access restrictions.
   // Unrestricted items are always allowed, and should be sent with a cache control header to tell CloudFront to cache the image.
   // Will need to account for whole site protections here.
@@ -29,6 +35,17 @@ exports.handler = async (event) => {
   // Check if the user is authorized to access the object (always true for public items).
   const authorized = isPublic ? true : await authorizeRequest(userRequest);
 
+  // If the user is not authorized, return a 403 Forbidden response.
+  if (!authorized) {
+    // If the user is not authorized, return a 403 Access Denied response.
+    params.StatusCode = 403;
+    params.ErrorMessage = 'Access Denied';
+  
+    await s3.writeGetObjectResponse(params).promise();
+
+    // Exit the Lambda function (the status code is for the lambda, not the user response).
+    return { statusCode: 200 };
+  }
 
   // Get image stored in S3 accessible via the presigned URL `inputS3Url`.
   const { data, headers, status } = await axios.get(inputS3Url, {
@@ -44,13 +61,6 @@ exports.handler = async (event) => {
   // Detect requests for resized images.
   // Detect the presence of image sizes -100x100.jpg or -100x100.png in the URL.
   const sizeMatch = userRequest.url.match(/-(\d+)x(\d+)\.(jpg|png)$/);
-
-  // Send the resized image back to S3 Object Lambda, if resizing.
-  // Right now, just send the original image back for public or authorized requests.
-  const params = {
-    RequestRoute: outputRoute,
-    RequestToken: outputToken,
-  };
   
   // If the image is not found, and there is a valid sizeMatch, try loading the original image.
   if (status === 404 && sizeMatch) {
@@ -89,17 +99,12 @@ exports.handler = async (event) => {
     return { statusCode: 200 };
   }
 
-  if (authorized) {
-    // If the user is authorized, return image.
-    params.Body = data;
-    params.ContentType = headers["content-type"];
-    // Set the cache control header for the response, never cache private items.
-    params.CacheControl = isPublic ? 'max-age=300' : 'max-age=0'; 
-  } else {
-    // If the user is not authorized, return a 403 Access Denied response.
-    params.ErrorMessage = 'Access Denied';
-    params.StatusCode = 403;
-  }
+
+  // If the user is authorized, return image.
+  params.Body = data;
+  params.ContentType = headers["content-type"];
+  // Set the cache control header for the response, never cache private items.
+  params.CacheControl = isPublic ? 'max-age=300' : 'max-age=0'; 
 
   await s3.writeGetObjectResponse(params).promise();
 
