@@ -2,9 +2,9 @@
 
 const { S3 } = require("aws-sdk");
 const axios = require("axios").default;  // Promise-based HTTP requests
-const sharp = require("sharp"); // Used for image resizing
+
 const { authorizeRequest } = require('./authorizeRequest/authorizeRequest.js');
-const { getOriginalS3Key } = require('./resize/resizeAndSave.js');
+const { getOriginalS3Key, resizeAndSave } = require('./resize/resizeAndSave.js');
 
 const s3 = new S3();
 
@@ -63,30 +63,8 @@ exports.handler = async (event) => {
       Key: s3Key
     }).promise();
 
-    // Get the width and height from the sizeMatch as integers.
-    const width = parseInt( sizeMatch[1], 10 );
-    const height = parseInt( sizeMatch[2], 10 );
-
-    
-    // Resize the image data with sharp.
-    const resized = await sharp(data.Body).resize({ width: width, height: height }).withMetadata();
-
-    // Strip file extension from the original s3Key.
-    const s3KeyWithoutExtension = s3Key.replace(/\.[^/.]+$/, "");
-
-    // Get the resized image data as a buffer.
-    const resizedBuffer = await resized.toBuffer();
-
-    // Save the resized image to S3, next to the original image.
-    await s3.putObject({ 
-      Bucket: originalBucket,
-      Key: `${s3KeyWithoutExtension}-${width}x${height}.${sizeMatch[3]}`,
-      Body: resizedBuffer,
-      ContentType: data.ContentType,
-      Metadata: {
-        'original-key': s3Key,
-      },
-    }).promise();
+    // Resize and save the image.
+    const resized = await resizeAndSave( data, s3Key, sizeMatch, originalBucket);
 
     // Return the resized image back to S3 Object Lambda.
     // Set the content type of the resized image.
