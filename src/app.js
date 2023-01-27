@@ -20,6 +20,15 @@ exports.handler = async (event) => {
   const { userRequest, getObjectContext } = event;
   const { outputRoute, outputToken, inputS3Url } = getObjectContext;
 
+  // Check access restrictions.
+  // Unrestricted items are always allowed, and should be sent with a cache control header to tell CloudFront to cache the image.
+  // Will need to account for whole site protections here.
+  const isPublic = !userRequest.url.includes('__restricted');
+
+  // Check if the user is authorized to access the object (always true for public items).
+  const authorized = isPublic ? true : await authorizeRequest(userRequest);
+
+
   // Get image stored in S3 accessible via the presigned URL `inputS3Url`.
   const { data, headers, status } = await axios.get(inputS3Url, {
     responseType: "arraybuffer",
@@ -100,13 +109,6 @@ exports.handler = async (event) => {
     await s3.writeGetObjectResponse(params).promise();
     return { statusCode: 200 };
   }
-
-  // Unrestricted items are always allowed, and should be sent with a cache control header to tell CloudFront to cache the image.
-  // Will need to account for whole site protections here.
-  const isPublic = !userRequest.url.includes('__restricted');
-
-  // Check if the user is authorized to access the object (always true for public items).
-  const authorized = isPublic ? true : await authorizeRequest(userRequest);
 
   if (authorized) {
     // If the user is authorized, return image.
