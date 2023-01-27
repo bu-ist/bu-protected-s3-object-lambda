@@ -2,10 +2,12 @@
 
 const { S3 } = require("aws-sdk");
 const axios = require("axios").default;  // Promise-based HTTP requests
-//const sharp = require("sharp"); // Used for image resizing
+const sharp = require("sharp"); // Used for image resizing
 const { authorizeRequest } = require('./authorizeRequest/authorizeRequest.js');
 
 const s3 = new S3();
+
+const underlyingOriginalBucket = process.env.UNDERLYING_ORIGINAL_BUCKET;
 
 exports.handler = async (event) => {
   // Output the event details to CloudWatch Logs.
@@ -28,6 +30,10 @@ exports.handler = async (event) => {
   // withMetadata retains the EXIF data which preserves the orientation of the image.
   //const resized = await sharp(data).resize({ width: 100, height: 100 }).withMetadata();
 
+  // Detect requests for resized images.
+  // Detect the presence of image sizes -100x100.jpg or -100x100.png in the URL.
+  const sizeMatch = userRequest.url.match(/-(\d+)x(\d+)\.(jpg|png)$/);
+
   // Send the resized image back to S3 Object Lambda, if resizing.
   // Right now, just send the original image back for public or authorized requests.
   const params = {
@@ -35,6 +41,54 @@ exports.handler = async (event) => {
     RequestToken: outputToken,
   };
   
+  // If the image is not found, and there is a valid sizeMatch, try loading the original image.
+  if (status === 404 && sizeMatch) {
+    // Reconstruct what the original image s3 key would be.
+    const originalUrl = userRequest.url.replace(/-(\d+)x(\d+)\.(jpg|png)$/, '.$3');
+    const parsedUrl = new URL(originalUrl);
+    const { pathname } = parsedUrl;
+    // The s3 key is the pathname without the leading slash.
+    const s3Key = pathname.replace(/^\//, '');
+
+    // Get the width and height from the sizeMatch as integers.
+    const width = parseInt( sizeMatch[1], 10 );
+    const height = parseInt( sizeMatch[2], 10 );
+
+    // Get the original image data from S3, through the underlying bucket not the access point.
+    const data = await s3.getObject({ Bucket: underlyingOriginalBucket, Key: s3Key }).promise();
+    
+    // Resize the image data with sharp.
+    const resized = await sharp(data.Body).resize({ width: width, height: height }).withMetadata();
+
+    // Strip file extension from the original s3Key.
+    const s3KeyWithoutExtension = s3Key.replace(/\.[^/.]+$/, "");
+
+    // Get the resized image data as a buffer.
+    const resizedBuffer = await resized.toBuffer();
+
+    // Save the resized image to S3, next to the original image.
+    await s3.putObject({ 
+      Bucket: underlyingOriginalBucket,
+      Key: `${s3KeyWithoutExtension}-${width}x${height}.${sizeMatch[3]}`,
+      Body: resizedBuffer,
+      ContentType: data.ContentType,
+    }).promise();
+
+    // Return the resized image back to S3 Object Lambda.
+    // Set the content type of the resized image.
+    params.ContentType = data.ContentType;
+    // Set the body of the response to the resized image data.
+    params.Body = await resized;
+    // Set the cache control header for the response.
+    params.CacheControl = 'max-age=300';
+    // Send the response to S3 Object Lambda.
+    await s3.writeGetObjectResponse(params).promise();
+
+    // Exit the Lambda function.
+    return { statusCode: 200 };
+
+  }
+
   // If the image is not found, return a 404 Not Found response.
   if (status === 404) {
     params.ErrorMessage = 'Not Found';
