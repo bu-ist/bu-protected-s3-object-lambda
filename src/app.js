@@ -4,6 +4,7 @@ const { S3 } = require("aws-sdk");
 const axios = require("axios").default;  // Promise-based HTTP requests
 const sharp = require("sharp"); // Used for image resizing
 const { authorizeRequest } = require('./authorizeRequest/authorizeRequest.js');
+const { getOriginalS3Key } = require('./resize/resizeAndSave.js');
 
 const s3 = new S3();
 
@@ -53,19 +54,19 @@ exports.handler = async (event) => {
   
   // If the image is not found, and there is a valid sizeMatch, try loading the original image.
   if (status === 404 && sizeMatch) {
-    // Reconstruct what the original image s3 key would be.
-    const originalUrl = userRequest.url.replace(/-(\d+)x(\d+)\.(jpg|png)$/, '.$3');
-    const parsedUrl = new URL(originalUrl);
-    const { pathname } = parsedUrl;
-    // The s3 key is the pathname without the leading slash.
-    const s3Key = pathname.replace(/^\//, '');
+    // Get the key of the original image from the URL.
+    const s3Key = getOriginalS3Key(userRequest.url);
+
+    // Get the original image data from S3, through the underlying bucket not the access point.
+    const data = await s3.getObject({
+      Bucket: originalBucket,
+      Key: s3Key
+    }).promise();
 
     // Get the width and height from the sizeMatch as integers.
     const width = parseInt( sizeMatch[1], 10 );
     const height = parseInt( sizeMatch[2], 10 );
 
-    // Get the original image data from S3, through the underlying bucket not the access point.
-    const data = await s3.getObject({ Bucket: originalBucket, Key: s3Key }).promise();
     
     // Resize the image data with sharp.
     const resized = await sharp(data.Body).resize({ width: width, height: height }).withMetadata();
