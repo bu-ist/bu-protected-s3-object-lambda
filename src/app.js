@@ -67,11 +67,25 @@ exports.handler = async (event) => {
     // Get the key of the original image from the URL.
     const s3Key = getOriginalS3Key(userRequest.url);
 
+    let fullSizeResponse;
     // Get the original image data from S3, through the underlying bucket not the access point.
-    const fullSizeResponse = await s3.getObject({
-      Bucket: originalBucket,
-      Key: s3Key
-    }).promise();
+    try {
+      fullSizeResponse = await s3.getObject({
+        Bucket: originalBucket,
+        Key: s3Key
+      }).promise();
+    } catch (error) {
+      if (error.code === 'NoSuchKey') {
+        // If the original image is not found, return a 404 Not Found response.
+        params.ErrorMessage = 'Not Found';
+        params.StatusCode = 404;
+      } else {
+        params.ErrorMessage = error.code;
+        params.StatusCode = error.statusCode;
+      }
+      await s3.writeGetObjectResponse(params).promise();
+      return { statusCode: 200 };
+    }
 
     // Resize and save the image.
     const resized = await resizeAndSave( fullSizeResponse, s3Key, sizeMatch, originalBucket);
