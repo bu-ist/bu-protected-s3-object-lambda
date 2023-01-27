@@ -68,17 +68,17 @@ exports.handler = async (event) => {
     const s3Key = getOriginalS3Key(userRequest.url);
 
     // Get the original image data from S3, through the underlying bucket not the access point.
-    const data = await s3.getObject({
+    const fullSizeResponse = await s3.getObject({
       Bucket: originalBucket,
       Key: s3Key
     }).promise();
 
     // Resize and save the image.
-    const resized = await resizeAndSave( data, s3Key, sizeMatch, originalBucket);
+    const resized = await resizeAndSave( fullSizeResponse, s3Key, sizeMatch, originalBucket);
 
     // Return the resized image back to S3 Object Lambda.
     // Set the content type of the resized image.
-    params.ContentType = data.ContentType;
+    params.ContentType = fullSizeResponse.ContentType;
     // Set the body of the response to the resized image data.
     params.Body = await resized;
     // Set the cache control header for the response.
