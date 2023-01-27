@@ -7,6 +7,7 @@ const { authorizeRequest } = require('./authorizeRequest/authorizeRequest.js');
 
 const s3 = new S3();
 
+// Get the name of the original bucket from the environment, for loading the original image and saving resized images.
 const originalBucket = process.env.ORIGINAL_BUCKET;
 
 exports.handler = async (event) => {
