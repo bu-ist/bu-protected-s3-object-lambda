@@ -72,6 +72,9 @@ exports.handler = async (event) => {
       Key: `${s3KeyWithoutExtension}-${width}x${height}.${sizeMatch[3]}`,
       Body: resizedBuffer,
       ContentType: data.ContentType,
+      Metadata: {
+        'original-key': s3Key,
+      },
     }).promise();
 
     // Return the resized image back to S3 Object Lambda.
