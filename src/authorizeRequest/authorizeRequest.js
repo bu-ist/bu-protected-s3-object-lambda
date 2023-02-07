@@ -22,9 +22,9 @@ async function authorizeRequest(userRequest) {
     const groupName = pathSegments[pathSegments.indexOf('__restricted') + 1];
 
     // Special handling for the entire-bu-community group, which only requires a valid BU login.
-    if (groupName === 'entire-bu-community' && userName !== '') {
-        // If there is a valid BU login, allow access.
-        return true;
+    if (groupName === 'entire-bu-community') {
+        // If there is a valid BU login, allow access, otherwise deny immediately.
+        return (userName !== '');
     }
     
     // Get the dynamodb table name from the environment.
