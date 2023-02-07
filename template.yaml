@@ -66,17 +66,34 @@ Resources:
     Properties:
       CodeUri: src/
       Handler: app.handler
-      Runtime: nodejs12.x
+      Runtime: nodejs16.x
+      # We wouldn't leave these defaults this high in production.
       MemorySize: 2048
+      Timeout: 30
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: !Ref AccessControlDynamoDB
+          ORIGINAL_BUCKET: !Ref S3Bucket
       # The function needs permission to call back to the S3 Object Lambda Access Point with the WriteGetObjectResponse.
       Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref AccessControlDynamoDB
         - S3CrudPolicy:
             BucketName: !Ref S3Bucket
         - Statement:
           - Effect: Allow
             Action: 's3-object-lambda:WriteGetObjectResponse'
             Resource: '*'
-   
+  
+  # DynamoDB table
+  AccessControlDynamoDB:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: SiteAndGroupKey
+        Type: String
+      TableName: !Sub ${AWS::StackName}-AccessControl
+
 Outputs:
   S3BucketName:
     Value: !Ref S3Bucket

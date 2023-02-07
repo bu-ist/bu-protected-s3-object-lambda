@@ -1,38 +1,125 @@
-/*! Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *  SPDX-License-Identifier: MIT-0
- */
+// first example here: https://docs.aws.amazon.com/AmazonS3/latest/userguide/olap-writing-lambda.html
 
 const { S3 } = require("aws-sdk");
 const axios = require("axios").default;  // Promise-based HTTP requests
-const sharp = require("sharp"); // Used for image resizing
+
+const { authorizeRequest } = require('./authorizeRequest/authorizeRequest.js');
+const { getOriginalS3Key, resizeAndSave } = require('./resize/resizeAndSave.js');
 
 const s3 = new S3();
 
+// Get the name of the original bucket from the environment, for loading the original image and saving resized images.
+const originalBucket = process.env.ORIGINAL_BUCKET;
+
 exports.handler = async (event) => {
   // Output the event details to CloudWatch Logs.
-  console.log("Event:\n", JSON.stringify(event, null, 2));
+  //console.log("Event:\n", JSON.stringify(event, null, 2));
 
   // Retrieve the operation context object from the event.
   // This contains the info for the WriteGetObjectResponse request.
   // Includes a presigned URL in `inputS3Url` to download the requested object.
-  const { getObjectContext } = event;
+  const { userRequest, getObjectContext } = event;
   const { outputRoute, outputToken, inputS3Url } = getObjectContext;
 
+  // Create the parameters for the WriteGetObjectResponse request.
+  const params = {
+    RequestRoute: outputRoute,
+    RequestToken: outputToken,
+  };
+
+  // Check access restrictions.
+  // Unrestricted items are always allowed, and should be sent with a cache control header to tell CloudFront to cache the image.
+  // Will need to account for whole site protections here.
+  const isPublic = !userRequest.url.includes('__restricted');
+
+  // Check if the user is authorized to access the object (always true for public items).
+  const authorized = isPublic ? true : await authorizeRequest(userRequest);
+
+  // If the user is not authorized, return a 403 Forbidden response.
+  if (!authorized) {
+    // If the user is not authorized, return a 403 Access Denied response.
+    params.StatusCode = 403;
+    params.ErrorMessage = 'Access Denied';
+  
+    await s3.writeGetObjectResponse(params).promise();
+
+    // Exit the Lambda function (the status code is for the lambda, not the user response).
+    return { statusCode: 200 };
+  }
+
   // Get image stored in S3 accessible via the presigned URL `inputS3Url`.
-  const { data, headers } = await axios.get(inputS3Url, { responseType: "arraybuffer" });
+  const { data, headers, status } = await axios.get(inputS3Url, {
+    responseType: "arraybuffer",
+    validateStatus: (status) => status < 500, // Reject only if the status code is greater than or equal to 500
+  });
 
   // Resize the image
   // Height is optional, will automatically maintain aspect ratio.
   // withMetadata retains the EXIF data which preserves the orientation of the image.
-  const resized = await sharp(data).resize({ width: 100, height: 100 }).withMetadata();
+  //const resized = await sharp(data).resize({ width: 100, height: 100 }).withMetadata();
 
-  // Send the resized image back to S3 Object Lambda.
-  const params = {
-    RequestRoute: outputRoute,
-    RequestToken: outputToken,
-    Body: resized,
-    ContentType: headers["content-type"],
-  };
+  // Detect requests for resized images.
+  // Detect the presence of image sizes -100x100.jpg or -100x100.png in the URL.
+  const sizeMatch = userRequest.url.match(/-(\d+)x(\d+)\.(jpg|png)$/);
+  
+  // If the image is not found, and there is a valid sizeMatch, try loading the original image.
+  if (status === 404 && sizeMatch) {
+    // Get the key of the original image from the URL.
+    const s3Key = getOriginalS3Key(userRequest.url);
+
+    let fullSizeResponse;
+    // Get the original image data from S3, through the underlying bucket not the access point.
+    try {
+      fullSizeResponse = await s3.getObject({
+        Bucket: originalBucket,
+        Key: s3Key
+      }).promise();
+    } catch (error) {
+      if (error.code === 'NoSuchKey') {
+        // If the original image is not found, return a 404 Not Found response.
+        params.ErrorMessage = 'Not Found';
+        params.StatusCode = 404;
+      } else {
+        params.ErrorMessage = error.code;
+        params.StatusCode = error.statusCode;
+      }
+      await s3.writeGetObjectResponse(params).promise();
+      return { statusCode: 200 };
+    }
+
+    // Resize and save the image.
+    const resized = await resizeAndSave( fullSizeResponse, s3Key, sizeMatch, originalBucket);
+
+    // Return the resized image back to S3 Object Lambda.
+    // Set the content type of the resized image.
+    params.ContentType = fullSizeResponse.ContentType;
+    // Set the body of the response to the resized image data.
+    params.Body = await resized;
+    // Set the cache control header for the response.
+    params.CacheControl = 'max-age=300';
+    // Send the response to S3 Object Lambda.
+    await s3.writeGetObjectResponse(params).promise();
+
+    // Exit the Lambda function.
+    return { statusCode: 200 };
+
+  }
+
+  // If the image is not found, return a 404 Not Found response.
+  if (status === 404) {
+    params.ErrorMessage = 'Not Found';
+    params.StatusCode = 404;
+    await s3.writeGetObjectResponse(params).promise();
+    return { statusCode: 200 };
+  }
+
+
+  // If the user is authorized, return image.
+  params.Body = data;
+  params.ContentType = headers["content-type"];
+  // Set the cache control header for the response, never cache private items.
+  params.CacheControl = isPublic ? 'max-age=300' : 'max-age=0'; 
+
   await s3.writeGetObjectResponse(params).promise();
 
   // Exit the Lambda function.
