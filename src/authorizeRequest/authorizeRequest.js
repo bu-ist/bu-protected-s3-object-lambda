@@ -1,6 +1,8 @@
 const { DynamoDB } = require('aws-sdk');
 
 const { checkUserAccess } = require('./checkUserAccess');
+const { checkNetworkAccess } = require('./checkNetworkAccess/checkNetworkAccess');
+
 
 async function authorizeRequest(userRequest) {
     // Check if the user is authorized to access the object.
