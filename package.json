@@ -1,0 +1,30 @@
+{
+  "name": "bu-protected-s3-object-lambda",
+  "version": "0.0.1",
+  "description": "Delivers asset from S3 through an object lambda with access restrictions and image resizing",
+  "scripts": {
+    "test": "jest",
+    "test-watch": "jest --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bu-ist/bu-protected-s3-object-lambda.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/bu-ist/bu-protected-s3-object-lambda/issues"
+  },
+  "homepage": "https://github.com/bu-ist/bu-protected-s3-object-lambda#readme",
+  "devDependencies": {
+    "eslint": "^8.34.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-n": "^15.6.1",
+    "eslint-plugin-promise": "^6.1.1",
+    "jest": "^29.4.3"
+  },
+  "jest": {
+    "rootDir": "./src"
+  }
+}
