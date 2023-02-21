@@ -1,3 +1,4 @@
+/* eslint-disable func-names */
 /* eslint-disable object-shorthand */
 
 // Set up some example records for the DynamoDB mock.

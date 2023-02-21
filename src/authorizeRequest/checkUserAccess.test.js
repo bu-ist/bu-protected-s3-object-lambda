@@ -5,10 +5,9 @@ const exampleUserRules = {
   users: ['testuser', 'testuser2'],
   states: ['staff'],
   entitlements: ['https://iam.bu.edu/entitlements/some-entitlement', 'https://iam.bu.edu/entitlements/some-other-entitlement'],
-}
+};
 
 describe('checkUserAccess', () => {
-
   it('should return false if there is no logged in user', () => {
     const headers = {
       'X-Bu-Shib-Username': '',
@@ -18,7 +17,7 @@ describe('checkUserAccess', () => {
     expect(checkUserAccess(exampleUserRules, headers)).toBe(false);
   });
 
-  it( 'should return false if the user attibutes dont match the rules', () => {
+  it('should return false if the user attibutes dont match the rules', () => {
     const headers = {
       'X-Bu-Shib-Username': 'not-listed-user',
       'X-Bu-Shib-Primary-Affiliation': 'faculty',

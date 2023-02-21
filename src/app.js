@@ -1,10 +1,10 @@
 // first example here: https://docs.aws.amazon.com/AmazonS3/latest/userguide/olap-writing-lambda.html
 
-const { S3 } = require("aws-sdk");
-const axios = require("axios").default;  // Promise-based HTTP requests
+const { S3 } = require('aws-sdk');
+const axios = require('axios').default; // Promise-based HTTP requests
 
-const { authorizeRequest } = require('./authorizeRequest/authorizeRequest.js');
-const { getOriginalS3Key, resizeAndSave } = require('./resize/resizeAndSave.js');
+const { authorizeRequest } = require('./authorizeRequest/authorizeRequest');
+const { getOriginalS3Key, resizeAndSave } = require('./resize/resizeAndSave');
 
 const s3 = new S3();
 
@@ -40,7 +40,7 @@ exports.handler = async (event) => {
     // If the user is not authorized, return a 403 Access Denied response.
     params.StatusCode = 403;
     params.ErrorMessage = 'Access Denied';
-  
+
     await s3.writeGetObjectResponse(params).promise();
 
     // Exit the Lambda function (the status code is for the lambda, not the user response).
@@ -49,7 +49,7 @@ exports.handler = async (event) => {
 
   // Get image stored in S3 accessible via the presigned URL `inputS3Url`.
   const { data, headers, status } = await axios.get(inputS3Url, {
-    responseType: "arraybuffer",
+    responseType: 'arraybuffer',
     validateStatus: (status) => status < 500, // Reject only if the status code is greater than or equal to 500
   });
 
@@ -61,7 +61,7 @@ exports.handler = async (event) => {
   // Detect requests for resized images.
   // Detect the presence of image sizes -100x100.jpg or -100x100.png in the URL.
   const sizeMatch = userRequest.url.match(/-(\d+)x(\d+)\.(jpg|png)$/);
-  
+
   // If the image is not found, and there is a valid sizeMatch, try loading the original image.
   if (status === 404 && sizeMatch) {
     // Get the key of the original image from the URL.
@@ -72,7 +72,7 @@ exports.handler = async (event) => {
     try {
       fullSizeResponse = await s3.getObject({
         Bucket: originalBucket,
-        Key: s3Key
+        Key: s3Key,
       }).promise();
     } catch (error) {
       if (error.code === 'NoSuchKey') {
@@ -88,7 +88,7 @@ exports.handler = async (event) => {
     }
 
     // Resize and save the image.
-    const resized = await resizeAndSave( fullSizeResponse, s3Key, sizeMatch, originalBucket);
+    const resized = await resizeAndSave(fullSizeResponse, s3Key, sizeMatch, originalBucket);
 
     // Return the resized image back to S3 Object Lambda.
     // Set the content type of the resized image.
@@ -102,7 +102,6 @@ exports.handler = async (event) => {
 
     // Exit the Lambda function.
     return { statusCode: 200 };
-
   }
 
   // If the image is not found, return a 404 Not Found response.
@@ -113,12 +112,11 @@ exports.handler = async (event) => {
     return { statusCode: 200 };
   }
 
-
   // If the user is authorized, return image.
   params.Body = data;
-  params.ContentType = headers["content-type"];
+  params.ContentType = headers['content-type'];
   // Set the cache control header for the response, never cache private items.
-  params.CacheControl = isPublic ? 'max-age=300' : 'max-age=0'; 
+  params.CacheControl = isPublic ? 'max-age=300' : 'max-age=0';
 
   await s3.writeGetObjectResponse(params).promise();
 
