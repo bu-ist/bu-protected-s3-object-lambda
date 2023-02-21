@@ -21,7 +21,7 @@ async function resizeAndSave(data, s3Key, sizeMatch, originalBucket) {
   const height = parseInt(sizeMatch[2], 10);
 
   // Resize the image data with sharp.
-  const resized = await sharp(data.Body).resize({ width: width, height: height }).withMetadata();
+  const resized = await sharp(data.Body).resize({ width, height }).withMetadata();
 
   // Strip file extension from the original s3Key.
   const s3KeyWithoutExtension = s3Key.replace(/\.[^/.]+$/, '');
