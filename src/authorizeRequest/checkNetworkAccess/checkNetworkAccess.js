@@ -23,10 +23,9 @@ function checkNetworkAccess( rules, headers ) {
         const { start, end } = range;
 
         // Calculate whether the ip address is in the range, by converting the ip address to a number with ip2long.
-        const inRange = (
-            ip2long( start ) <= ip2long( userIp ) ) 
-            && ( ip2long( end ) >= ip2long( userIp ) 
-        );
+        const inRange = ip2long( start ) <= ip2long( userIp )
+            && ip2long( end ) >= ip2long( userIp );
+
         return inRange;
     } );
 

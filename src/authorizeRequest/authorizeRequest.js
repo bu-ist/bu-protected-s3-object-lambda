@@ -47,8 +47,16 @@ async function authorizeRequest(userRequest) {
     // Parse the rules.
     const rules = JSON.parse(Item.rules);
 
-    // Apply the user rules.
-    const allowed = checkUserAccess(rules, headers);
+  // Apply the rules.
+  const userAllowed = checkUserAccess(rules, headers);
+  const networkAllowed = checkNetworkAccess(rules, headers);
+
+  // Check for a satisfy all flag in the rules, default to false.
+  const { satisfy_all: satisfyAll = false } = rules;
+
+  // If the rules are set to satisfy all, then both the user and network must be allowed.
+  // Otherwise, either the user or network must be allowed.
+  const allowed = satisfyAll ? userAllowed && networkAllowed : userAllowed || networkAllowed;
 
     return allowed;
 }
