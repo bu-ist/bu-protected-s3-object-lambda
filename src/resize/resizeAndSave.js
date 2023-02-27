@@ -15,7 +15,7 @@ function getOriginalS3Key(url) {
 }
 
 // Resize and save the image to S3, then return the resized image data.
-async function resizeAndSave(data, s3Key, sizeMatch, originalBucket) {
+async function resizeAndSave(data, s3Key, sizeMatch, bucketName) {
   // Get the width and height from the sizeMatch as integers.
   const width = parseInt(sizeMatch[1], 10);
   const height = parseInt(sizeMatch[2], 10);
@@ -31,7 +31,7 @@ async function resizeAndSave(data, s3Key, sizeMatch, originalBucket) {
 
   // Save the resized image to S3, next to the original image.
   await s3.putObject({
-    Bucket: originalBucket,
+    Bucket: bucketName,
     Key: `${s3KeyWithoutExtension}-${width}x${height}.${sizeMatch[3]}`,
     Body: resizedBuffer,
     ContentType: data.ContentType,
