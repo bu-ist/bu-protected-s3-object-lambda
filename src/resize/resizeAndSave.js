@@ -1,6 +1,11 @@
 const { S3 } = require('aws-sdk');
 const sharp = require('sharp'); // Used for image resizing
 
+const bucketName = process.env.ORIGINAL_BUCKET;
+
+const ORIGINAL_PATH_ROOT = 'original_media';
+const RENDER_PATH_ROOT = 'rendered_media';
+
 const s3 = new S3();
 
 function getOriginalS3Key(url) {
@@ -15,7 +20,7 @@ function getOriginalS3Key(url) {
 }
 
 // Resize and save the image to S3, then return the resized image data.
-async function resizeAndSave(data, s3Key, sizeMatch, bucketName) {
+async function resizeAndSave(data, originalPath, sizeMatch) {
   // Get the width and height from the sizeMatch as integers.
   const width = parseInt(sizeMatch[1], 10);
   const height = parseInt(sizeMatch[2], 10);
@@ -24,7 +29,7 @@ async function resizeAndSave(data, s3Key, sizeMatch, bucketName) {
   const resized = await sharp(data.Body).resize({ width, height }).withMetadata();
 
   // Strip file extension from the original s3Key.
-  const s3KeyWithoutExtension = s3Key.replace(/\.[^/.]+$/, '');
+  const pathWithoutExtension = originalPath.replace(/\.[^/.]+$/, '');
 
   // Get the resized image data as a buffer.
   const resizedBuffer = await resized.toBuffer();
@@ -32,11 +37,11 @@ async function resizeAndSave(data, s3Key, sizeMatch, bucketName) {
   // Save the resized image to S3, next to the original image.
   await s3.putObject({
     Bucket: bucketName,
-    Key: `${s3KeyWithoutExtension}-${width}x${height}.${sizeMatch[3]}`,
+    Key: `${RENDER_PATH_ROOT}${pathWithoutExtension}-${width}x${height}.${sizeMatch[3]}`,
     Body: resizedBuffer,
     ContentType: data.ContentType,
     Metadata: {
-      'original-key': s3Key,
+      'original-key': `${ORIGINAL_PATH_ROOT}${originalPath}`,
     },
   }).promise();
 
