@@ -21,8 +21,8 @@ async function tryGetObject(s3Key) {
 }
 
 async function getOrCreateObject(url) {
-  const parsedUrl = new URL(url);
-  const { pathname } = parsedUrl;
+  // Get the pathname from the URL.
+  const { pathname } = new URL(url);
   // The s3 key is the pathname without the leading slash.
   const s3Key = pathname.replace(/^\//, '');
 
