@@ -3,8 +3,7 @@ const sharp = require('sharp'); // Used for image resizing
 
 const bucketName = process.env.ORIGINAL_BUCKET;
 
-const ORIGINAL_PATH_ROOT = 'original_media';
-const RENDER_PATH_ROOT = 'rendered_media';
+const { ORIGINAL_PATH_ROOT, RENDER_PATH_ROOT } = require('./pathConstants');
 
 const s3 = new S3();
 
