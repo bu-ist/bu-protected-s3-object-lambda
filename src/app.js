@@ -3,7 +3,7 @@
 const { S3 } = require('aws-sdk');
 
 const { authorizeRequest } = require('./authorizeRequest/authorizeRequest');
-const { getOrCreateObject } = require('./resize/getOrCreateObject');
+const { getOrCreateObject } = require('./getOrCreateObject/getOrCreateObject');
 
 const s3 = new S3();
 
