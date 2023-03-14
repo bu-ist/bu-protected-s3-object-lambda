@@ -17,6 +17,7 @@ Resources:
         RestrictPublicBuckets: true
       VersioningConfiguration:
         Status: Enabled
+      BucketName: !Sub ${AWS::StackName}-assets
 
   S3BucketPolicy:
     Type: 'AWS::S3::BucketPolicy'
@@ -43,13 +44,13 @@ Resources:
     Type: 'AWS::S3::AccessPoint'
     Properties:
       Bucket: !Ref S3Bucket
-      Name: 'resize-ap'
+      Name: !Sub ${AWS::StackName}-ap
 
   # S3 Object Lambda Access Point
   S3ObjectLambdaAccessPoint:
     Type: 'AWS::S3ObjectLambda::AccessPoint'
     Properties: 
-      Name: 'resize-olap'
+      Name: !Sub ${AWS::StackName}-olap
       ObjectLambdaConfiguration: 
           SupportingAccessPoint: !Sub 'arn:aws:s3:${AWS::Region}:${AWS::AccountId}:accesspoint/${S3AccessPoint}'
           TransformationConfigurations: 
@@ -60,13 +61,78 @@ Resources:
                 FunctionArn: !GetAtt ResizeFunction.Arn
                 FunctionPayload: 'test-payload'
 
+  # IAM principal user who has full access to the bucket, access points, and his own credentials.
+  BucketUser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: !Sub ${AWS::StackName}-user
+      Policies:
+        - PolicyName: !Sub ${AWS::StackName}-user-policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Effect: Allow
+              Resource:
+                - !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${AWS::StackName}-user/AccessKey
+              Action:
+                - secretsmanager:GetSecretValue
+            - Effect: Allow
+              Resource: 
+                - !Sub arn:aws:s3:::${S3Bucket}
+                - !Sub arn:aws:s3:::${S3Bucket}/*
+              Action: "*"
+            - Effect: Allow
+              Resource: 
+                - !GetAtt ResizeFunction.Arn
+              Action: "*"
+            - Effect: Allow
+              Resource: 
+                - !Sub arn:aws:s3:${AWS::Region}:${AWS::AccountId}:accesspoint/${S3AccessPoint}
+                - !Sub arn:aws:s3:${AWS::Region}:${AWS::AccountId}:accesspoint/${S3AccessPoint}/*
+              Action: "*"
+            - Effect: Allow
+              Resource: 
+                - !Sub arn:aws:s3-object-lambda:${AWS::Region}:${AWS::AccountId}:accesspoint/${S3ObjectLambdaAccessPoint}
+                - !Sub arn:aws:s3-object-lambda:${AWS::Region}:${AWS::AccountId}:accesspoint/${S3ObjectLambdaAccessPoint}/*
+              Action: "*"
+
+  # Access key for the bucket user. Will be stored in secrets manager.
+  AccessKey:
+    Type: AWS::IAM::AccessKey
+    DependsOn: BucketUser
+    Properties: 
+      Status: Active
+      UserName: !Ref BucketUser
+
+  Secret:
+    Type: AWS::SecretsManager::Secret
+    DependsOn: AccessKey
+    Properties: 
+      Name: !Sub ${BucketUser}/AccessKey
+      Description: !Sub Stores the credentials for the ${BucketUser} IAM principal.
+      SecretString: 
+        !Sub
+          - |
+            {
+              "user": "${user}", 
+              "bucket": "${bucket}",
+              "aws_access_key_id": "${id}",
+              "aws_secret_access_key": "${key}",
+              "aws_region": "${region}"
+            }
+          - user: !Sub ${AWS::StackName}-user
+            id: !Ref AccessKey
+            key: !GetAtt AccessKey.SecretAccessKey
+            region: !Ref AWS::Region
+            bucket: !Ref S3Bucket
+
   # Lambda function
   ResizeFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
       CodeUri: src/
       Handler: app.handler
-      Runtime: nodejs18.x
+      Runtime: nodejs16.x
       # We wouldn't leave these defaults this high in production.
       MemorySize: 2048
       Timeout: 30
@@ -94,6 +160,7 @@ Resources:
         Type: String
       TableName: !Sub ${AWS::StackName}-AccessControl
 
+
 Outputs:
   S3BucketName:
     Value: !Ref S3Bucket
@@ -106,4 +173,10 @@ Outputs:
     Description: ARN of the S3 Object Lambda access point.
   ResizeFunctionArn:
     Value: !Ref ResizeFunction
-    Description: ResizeFunction ARN.
+    Description: ResizeFunction ARN.  
+  BucketUserName:
+    Description: The name of the bucket user
+    Value: !Ref BucketUser
+  SecretArn:
+    Description: The arn of the secret that contains the access key for the user
+    Value: !Ref Secret
