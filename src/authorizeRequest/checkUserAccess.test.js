@@ -28,27 +28,27 @@ describe('checkUserAccess', () => {
 
   it('should return true if the user is in the list of users', () => {
     const headers = {
-      'X-Bu-Shib-Username': 'testuser',
-      'X-Bu-Shib-Primary-Affiliation': '',
-      'X-Bu-Shib-Entitlement': [],
+      buPrincipalNameID: 'testuser',
+      affiliation: '',
+      entitlement: [],
     };
     expect(checkUserAccess(exampleUserRules, headers)).toBe(true);
   });
 
   it('should return true if the user is in the list of affiliations', () => {
     const headers = {
-      'X-Bu-Shib-Username': 'someuser-not-in-the-list',
-      'X-Bu-Shib-Primary-Affiliation': 'staff',
-      'X-Bu-Shib-Entitlement': [],
+      buPrincipalNameID: 'someuser-not-in-the-list',
+      affiliation: 'staff',
+      entitlement: [],
     };
     expect(checkUserAccess(exampleUserRules, headers)).toBe(true);
   });
 
   it('should return true if the user has an entitlement', () => {
     const headers = {
-      'X-Bu-Shib-Username': 'someuser-not-in-the-list',
-      'X-Bu-Shib-Primary-Affiliation': 'student',
-      'X-Bu-Shib-Entitlement': ['https://iam.bu.edu/entitlements/some-entitlement'],
+      buPrincipalNameID: 'someuser-not-in-the-list',
+      affiliation: 'student',
+      entitlement: ['https://iam.bu.edu/entitlements/some-entitlement'],
     };
     expect(checkUserAccess(exampleUserRules, headers)).toBe(true);
   });
