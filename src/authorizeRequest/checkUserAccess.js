@@ -1,9 +1,9 @@
 function checkUserAccess(rules, headers) {
   // Destructure the header object to get the shib attributes, with defaults.
   const {
-    'X-Bu-Shib-Username': userName = '',
-    'X-Bu-Shib-Primary-Affiliation': userAffiliation = '',
-    'X-Bu-Shib-Entitlement': userEntitlements = [],
+    buPrincipalNameID: userName = '',
+    affiliation: userAffiliation = '',
+    entitlement: userEntitlements = [],
   } = headers;
 
   // Unpack the rules, with defaults.
