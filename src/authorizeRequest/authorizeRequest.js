@@ -15,7 +15,7 @@ async function authorizeRequest(userRequest) {
     convertResponseTypes: false,
   });
 
-  const { 'X-Bu-Shib-Username': userName = '' } = headers;
+  const { buPrincipalNameID: userName = '' } = headers;
 
   // Get the group name from the uri, it is the segment after the "/__restricted/" segment.
   // Should probably sanitize the path segments here, to only valid url characters just in case.
