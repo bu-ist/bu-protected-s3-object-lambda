@@ -83,15 +83,6 @@ Resources:
               Action: "*"
             - Effect: Allow
               Resource: 
-                - !GetAtt ResizeFunction.Arn
-              Action: "*"
-            - Effect: Allow
-              Resource: 
-                - !Sub arn:aws:s3:${AWS::Region}:${AWS::AccountId}:accesspoint/${S3AccessPoint}
-                - !Sub arn:aws:s3:${AWS::Region}:${AWS::AccountId}:accesspoint/${S3AccessPoint}/*
-              Action: "*"
-            - Effect: Allow
-              Resource: 
                 - !Sub arn:aws:s3-object-lambda:${AWS::Region}:${AWS::AccountId}:accesspoint/${S3ObjectLambdaAccessPoint}
                 - !Sub arn:aws:s3-object-lambda:${AWS::Region}:${AWS::AccountId}:accesspoint/${S3ObjectLambdaAccessPoint}/*
               Action: "*"
@@ -132,7 +123,7 @@ Resources:
     Properties:
       CodeUri: src/
       Handler: app.handler
-      Runtime: nodejs16.x
+      Runtime: nodejs18.x
       # We wouldn't leave these defaults this high in production.
       MemorySize: 2048
       Timeout: 30

@@ -1,37 +1,28 @@
 version = 0.1
 [default]
 [default.deploy]
-[default.global.parameters]
+[default.deploy.parameters]
+stack_name = "jaydub-s3-object-lambda"
+s3_bucket = "aws-sam-cli-managed-dev-pi-artifactsloggingbucket-mk5y62po4loh"
+s3_prefix = "jaydub-s3-object-lambda"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM"
+disable_rollback = true
+image_repositories = []
+
+
+[warren]
+[warren.deploy]
+[warren.global.parameters]
 region = "us-east-1"
 capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND"
 disable_rollback = true
-stack_name = "bu-wp-s3-object-lambda"
+stack_name = "bu-wp-s3-object-lambda-warren"
 tags = "Service=\"websites\" Function=\"wordpress\" Project=\"bu-wp-to-cloud\" Landscape=\"dev\""
 s3_bucket = "aws-sam-cli-managed-dev-pi-artifactsloggingbucket-mk5y62po4loh"
-# s3_prefix = "[env]"
-
-[default.deploy.parameters]
+s3_prefix = "warren"
+[warren.deploy.parameters]
 image_repositories = []
-
-[default.delete.parameters]
-no-prompts = true
+[warren.delete.parameters]
 region = "us-east-1"
-
-
-# [myenv]
-# [myenv.deploy]
-# [myenv.global.parameters]
-# region = "us-east-1"
-# capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND"
-# disable_rollback = true
-# stack_name = "bu-wp-s3-object-lambda-myenv"
-# tags = "Service=\"websites\" Function=\"wordpress\" Project=\"bu-wp-to-cloud\" Landscape=\"dev\""
-# s3_bucket = "aws-sam-cli-managed-dev-pi-artifactsloggingbucket-mk5y62po4loh"
-# s3_prefix = "myenv"
-#
-# [myenv.deploy.parameters]
-# image_repositories = []
-#
-# [myenv.delete.parameters]
-# region = "us-east-1"
-# no-prompts = true
+no-prompts = true
