@@ -77,6 +77,11 @@ Resources:
               Action:
                 - secretsmanager:GetSecretValue
             - Effect: Allow
+              Resource:
+                - !GetAtt ResizeFunction.Arn
+              Action: 
+                - lambda:InvokeFunction
+            - Effect: Allow
               Resource: 
                 - !Sub arn:aws:s3:::${S3Bucket}
                 - !Sub arn:aws:s3:::${S3Bucket}/*
