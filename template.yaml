@@ -58,7 +58,7 @@ Resources:
               - GetObject
             ContentTransformation: 
               AwsLambda:
-                FunctionArn: !GetAtt ResizeFunction.Arn
+                FunctionArn: !GetAtt ObjectLambdaFunction.Arn
                 FunctionPayload: 'test-payload'
 
   # IAM principal user who has full access to the bucket, access points, and his own credentials.
@@ -78,7 +78,7 @@ Resources:
                 - secretsmanager:GetSecretValue
             - Effect: Allow
               Resource:
-                - !GetAtt ResizeFunction.Arn
+                - !GetAtt ObjectLambdaFunction.Arn
               Action: 
                 - lambda:InvokeFunction
             - Effect: Allow
@@ -123,7 +123,7 @@ Resources:
             bucket: !Ref S3Bucket
 
   # Lambda function
-  ResizeFunction:
+  ObjectLambdaFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
       CodeUri: src/
@@ -167,9 +167,9 @@ Outputs:
   S3ObjectLambdaAccessPointArn:
     Value: !GetAtt S3ObjectLambdaAccessPoint.Arn
     Description: ARN of the S3 Object Lambda access point.
-  ResizeFunctionArn:
-    Value: !Ref ResizeFunction
-    Description: ResizeFunction ARN.  
+  ObjectLambdaFunctionArn:
+    Value: !Ref ObjectLambdaFunction
+    Description: ObjectLambdaFunction ARN.  
   BucketUserName:
     Description: The name of the bucket user
     Value: !Ref BucketUser
