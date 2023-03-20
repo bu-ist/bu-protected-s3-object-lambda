@@ -34,8 +34,8 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     needs: run-tests
     steps:
-      run: echo '${{ toJSON(github) }}'
-      run: |
+      - run: echo '${{ toJSON(github) }}'
+      - run: |
         if [ -z "$(git tag --merged fake-prod | grep '^${{ github.ref }}$' 2> /dev/null)" ] ; then
           echo 'Prod release tag applied, but not reachable from fake-main branch!'
           exit 1
