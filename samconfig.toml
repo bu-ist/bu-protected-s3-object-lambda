@@ -2,10 +2,10 @@ version = 0.1
 [default]
 [default.deploy]
 [default.deploy.parameters]
-stack_name = "jaydub-s3-object-lambda"
+stack_name = "wordpress-protected-s3-assets-jaydub"
 tags = "Service=\"websites\" Function=\"wordpress\" Project=\"bu-wp-to-cloud\" Landscape=\"dev\""
 s3_bucket = "aws-sam-cli-managed-dev-pi-artifactsloggingbucket-mk5y62po4loh"
-s3_prefix = "jaydub-s3-object-lambda"
+s3_prefix = "wordpress-protected-s3-assets-jaydub"
 region = "us-east-1"
 capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM"
 disable_rollback = false
