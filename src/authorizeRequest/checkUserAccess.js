@@ -1,10 +1,13 @@
 function checkUserAccess(rules, headers) {
   // Destructure the header object to get the shib attributes, with defaults.
   const {
-    buPrincipalNameID: userName = '',
-    affiliation: userAffiliation = '',
+    eppn = '',
+    'primary-affiliation': userAffiliation = '',
     entitlement: userEntitlements = [],
   } = headers;
+
+  // Get the userName as the unscoped eppn ( e.g. the email without the @domain).
+  const userName = eppn.split('@')[0];
 
   // Unpack the rules, with defaults.
   const { users = [], states: affiliations = [], entitlements = [] } = rules;

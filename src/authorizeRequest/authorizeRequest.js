@@ -15,7 +15,13 @@ async function authorizeRequest(userRequest) {
     convertResponseTypes: false,
   });
 
-  const { buPrincipalNameID: userName = '' } = headers;
+  const {
+    eppn = '',
+    'X-Forwarded-Host': forwardedHost = '',
+  } = headers;
+
+  // Get the userName as the unscoped eppn ( e.g. the email without the @domain).
+  const userName = eppn.split('@')[0];
 
   // Get the group name from the uri, it is the segment after the "/__restricted/" segment.
   // Should probably sanitize the path segments here, to only valid url characters just in case.
