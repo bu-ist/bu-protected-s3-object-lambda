@@ -6,7 +6,7 @@ describe('authorizeRequest', () => {
     const userRequest = {
       url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/__restricted/entire-bu-community/image.jpg',
       headers: {
-        buPrincipalNameID: 'testUser',
+        eppn: 'testUser@bu.edu',
       },
     };
     const result = await authorizeRequest(userRequest);
@@ -27,7 +27,7 @@ describe('authorizeRequest', () => {
     const userRequest = {
       url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/__restricted/somegroup/image.jpg',
       headers: {
-        buPrincipalNameID: 'user2',
+        eppn: 'user2@bu.edu',
       },
     };
     const result = await authorizeRequest(userRequest);
