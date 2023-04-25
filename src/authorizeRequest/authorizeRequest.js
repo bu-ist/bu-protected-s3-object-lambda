@@ -23,10 +23,24 @@ async function authorizeRequest(userRequest) {
   // Get the userName as the unscoped eppn ( e.g. the email without the @domain).
   const userName = eppn.split('@')[0];
 
+  // Get the domain from the forwarded host, is this going to be reliable?
+  const domain = forwardedHost.split(', ')[0];
+
   // Get the group name from the uri, it is the segment after the "/__restricted/" segment.
   // Should probably sanitize the path segments here, to only valid url characters just in case.
   const pathSegments = url.split('/');
-  const groupName = pathSegments[pathSegments.indexOf('__restricted') + 1];
+
+  const indexOfRestricted = pathSegments.indexOf('__restricted');
+  const groupName = pathSegments[indexOfRestricted + 1];
+
+  // Detect if this is the root site by the position of the __restricted segment.
+  const isRootSite = indexOfRestricted < 5;
+
+  // Not sure if this should be detected by position of '__restricted' or by proximity to 'files'.
+  const siteName = isRootSite ? '' : pathSegments[indexOfRestricted - 2];
+
+  // This still has problems with the root site, since there is no site name it will leave a useless trailing slash.
+  const siteAndGroupKey = `${domain}/${siteName}#${groupName}`;
 
   // Special handling for the entire-bu-community group, which only requires a valid BU login.
   if (groupName === 'entire-bu-community') {
@@ -42,7 +56,7 @@ async function authorizeRequest(userRequest) {
   // to avoid INFO Failed to find the group in DynamoDB for group:  entire-bu-community
   const { Item } = await dynamoDb.get({
     TableName: tableName,
-    Key: { SiteAndGroupKey: groupName },
+    Key: { SiteAndGroupKey: siteAndGroupKey },
   }).promise();
 
   if (Item == null) {
