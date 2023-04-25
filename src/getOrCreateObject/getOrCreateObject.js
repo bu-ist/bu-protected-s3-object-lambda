@@ -22,7 +22,7 @@ async function tryGetObject(s3Key) {
   return response;
 }
 
-async function getOrCreateObject(url) {
+async function getOrCreateObject(url, domain) {
   // Get the pathname from the URL.
   const { pathname } = new URL(url);
   // Get the size match from the pathname.
@@ -30,7 +30,7 @@ async function getOrCreateObject(url) {
 
   // The s3 key is dependent on whether the image is an original or a render.
   // Prepend the appropriate path root to the pathname, based on the sizeMatch.
-  const s3Key = `${sizeMatch ? RENDER_PATH_ROOT : ORIGINAL_PATH_ROOT}${pathname}`;
+  const s3Key = `${sizeMatch ? RENDER_PATH_ROOT : ORIGINAL_PATH_ROOT}/${domain}${pathname}`;
 
   // Try to get the object from S3.
   const response = await tryGetObject(s3Key);
@@ -39,7 +39,7 @@ async function getOrCreateObject(url) {
   if (response.code === 'NoSuchKey' && sizeMatch) {
     // Reconstruct what the original image s3 key would be, by removing the image size from the URL.
     const originalPath = pathname.replace(/-(\d+)x(\d+)\.(jpg|png)$/, '.$3');
-    const originalKey = `${ORIGINAL_PATH_ROOT}${originalPath}`;
+    const originalKey = `${ORIGINAL_PATH_ROOT}/${domain}${originalPath}`;
 
     const originalResponse = await tryGetObject(originalKey);
     // If there's no original image, then return the 404 response.
@@ -47,7 +47,7 @@ async function getOrCreateObject(url) {
       return response;
     }
     // If there is an original, resize the image data with sharp and save it for future requests.
-    const resized = await resizeAndSave(originalResponse, originalPath, sizeMatch);
+    const resized = await resizeAndSave(originalResponse, `/${domain}${originalPath}`, sizeMatch);
     // Return the resized image response, formatted as an S3 getObject response.
     return {
       Body: resized,
