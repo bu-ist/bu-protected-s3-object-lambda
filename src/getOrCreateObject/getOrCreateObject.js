@@ -30,8 +30,10 @@ async function getOrCreateObject(url, domain) {
 
   // The s3 key is dependent on whether the image is an original or a render.
   // Prepend the appropriate path root to the pathname, based on the sizeMatch.
-  const s3Key = `${sizeMatch ? RENDER_PATH_ROOT : ORIGINAL_PATH_ROOT}/${domain}${pathname}`;
+  let s3Key = `${sizeMatch ? RENDER_PATH_ROOT : ORIGINAL_PATH_ROOT}/${domain}${pathname}`;
 
+  // Remove double slashes from the s3 key, in the case of a missing domain.... this shouldn't be necessary there has to be a better way.
+  s3Key = s3Key.replace(/\/\//g, '/');
   // Try to get the object from S3.
   const response = await tryGetObject(s3Key);
 
