@@ -4,7 +4,7 @@ const rangeSets = require('./ranges.json');
 function checkNetworkAccess(rules, headers) {
   // Destructure the header object to get the shib attributes, with defaults.
   const {
-    'X-Bu-Ip-Forwarded-For': userIp = '',
+    'X-Real-IP': userIp = '',
   } = headers;
 
   // Get the campus names from the rules object that stores network rules, with a default value of an empty array.
