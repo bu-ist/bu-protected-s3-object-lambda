@@ -45,7 +45,8 @@ exports.handler = async (event) => {
   // Append the domain name to the object key.
   // This is required for the S3 getObject request.
   // Get the domain from the forwarded host, is this going to be reliable?
-  const domain = userRequest.headers['X-Forwarded-Host'].split(', ')[0];
+  const forwardedHost = userRequest.headers['X-Forwarded-Host'] ?? '';
+  const domain = forwardedHost.split(', ')[0];
 
   // If the user is authorized, try to get the object from S3.
   const response = await getOrCreateObject(userRequest.url, domain);
