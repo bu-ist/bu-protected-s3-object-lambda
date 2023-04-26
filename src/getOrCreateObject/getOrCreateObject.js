@@ -26,7 +26,7 @@ async function getOrCreateObject(url, domain) {
   // Get the pathname from the URL.
   const { pathname } = new URL(url);
   // Get the size match from the pathname.
-  const sizeMatch = pathname.match(/-(\d+)x(\d+)\.(jpg|png)$/);
+  const sizeMatch = pathname.match(/-(\d+)x(\d+)\.(jpg|jpeg|png|gif)$/);
 
   // The s3 key is dependent on whether the image is an original or a render.
   // Prepend the appropriate path root to the pathname, based on the sizeMatch.
@@ -43,7 +43,7 @@ async function getOrCreateObject(url, domain) {
   // if the image is not found, and there is a size match, then resize the image and save it to S3.
   if (response.code === 'NoSuchKey' && sizeMatch) {
     // Reconstruct what the original image s3 key would be, by removing the image size from the URL.
-    const originalPath = pathname.replace(/-(\d+)x(\d+)\.(jpg|png)$/, '.$3');
+    const originalPath = pathname.replace(/-(\d+)x(\d+)\.(jpg|jpeg|png|gif)$/, '.$3');
     const originalKey = `${ORIGINAL_PATH_ROOT}/${domain}${originalPath}`;
 
     const originalResponse = await tryGetObject(originalKey);
