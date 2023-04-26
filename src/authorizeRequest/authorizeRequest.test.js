@@ -4,9 +4,10 @@ describe('authorizeRequest', () => {
   // Entire community group tests.
   it('should return true if the user is granted access through the entire community group', async () => {
     const userRequest = {
-      url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/__restricted/entire-bu-community/image.jpg',
+      url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/entire-bu-community/image.jpg',
       headers: {
-        buPrincipalNameID: 'testUser',
+        eppn: 'testUser@bu.edu',
+        'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
       },
     };
     const result = await authorizeRequest(userRequest);
@@ -15,19 +16,39 @@ describe('authorizeRequest', () => {
 
   it('should return false if the user is not logged in and the file is restricted to the entire bu community', async () => {
     const userRequest = {
-      url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/__restricted/entire-bu-community/image.jpg',
-      headers: {},
+      url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/entire-bu-community/image.jpg',
+      headers: {
+        'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
+      },
     };
     const result = await authorizeRequest(userRequest);
     expect(result).toBe(false);
   });
 
-  // Group tests.
+  // User tests.
   it('should return true if the user is granted access by user name', async () => {
     const userRequest = {
-      url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/__restricted/somegroup/image.jpg',
+      url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/somegroup/image.jpg',
       headers: {
-        buPrincipalNameID: 'user2',
+        eppn: 'user2@bu.edu',
+        'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
+      },
+    };
+    const result = await authorizeRequest(userRequest);
+    expect(result).toBe(true);
+  });
+
+  // Affiliation tests.
+
+  // Entitlement tests.
+
+  // Add a test for a root site vs a sub site.
+  it('should return true if the user is granted access by user name', async () => {
+    const userRequest = {
+      url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/files/__restricted/somegroup/image.jpg',
+      headers: {
+        eppn: 'user2@bu.edu',
+        'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
       },
     };
     const result = await authorizeRequest(userRequest);
@@ -37,9 +58,10 @@ describe('authorizeRequest', () => {
   // Network tests.
   it('should return true if the user is granted access by network address', async () => {
     const userRequest = {
-      url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/__restricted/somegroup/image.jpg',
+      url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/somegroup/image.jpg',
       headers: {
-        'X-Bu-Ip-Forwarded-For': '128.197.30.30',
+        'X-Real-IP': '128.197.30.30',
+        'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
       },
     };
     const result = await authorizeRequest(userRequest);
@@ -48,8 +70,11 @@ describe('authorizeRequest', () => {
 
   it('should return false if the user is not granted access by network address', async () => {
     const userRequest = {
-      url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/__restricted/somegroup/image.jpg',
-      headers: { 'X-Bu-Ip-Forwarded-For': '127.0.0.1' },
+      url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/somegroup/image.jpg',
+      headers: {
+        'X-Real-IP': '127.0.0.1',
+        'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
+      },
     };
     const result = await authorizeRequest(userRequest);
     expect(result).toBe(false);
@@ -57,8 +82,11 @@ describe('authorizeRequest', () => {
 
   it('should return false if the user only has network address access, and satisfy_all is true', async () => {
     const userRequest = {
-      url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/__restricted/othergroup/image.jpg',
-      headers: { 'X-Bu-Ip-Forwarded-For': '128.197.30.30' },
+      url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/othergroup/image.jpg',
+      headers: {
+        'X-Real-IP': '128.197.30.30',
+        'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
+      },
     };
     const result = await authorizeRequest(userRequest);
     expect(result).toBe(false);

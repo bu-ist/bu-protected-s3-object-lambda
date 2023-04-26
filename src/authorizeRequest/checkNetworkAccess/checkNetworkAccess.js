@@ -2,9 +2,9 @@ const { ip2long } = require('./ip2long');
 const rangeSets = require('./ranges.json');
 
 function checkNetworkAccess(rules, headers) {
-  // Destructure the header object to get the shib attributes, with defaults.
+  // Get the user ip address from the headers, with a default value of an empty string.
   const {
-    'X-Bu-Ip-Forwarded-For': userIp = '',
+    'X-Real-IP': userIp = '',
   } = headers;
 
   // Get the campus names from the rules object that stores network rules, with a default value of an empty array.

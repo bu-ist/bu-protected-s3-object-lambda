@@ -16,6 +16,8 @@ exports.handler = async (event) => {
   const { userRequest, getObjectContext } = event;
   const { outputRoute, outputToken } = getObjectContext;
 
+  console.log('userRequest:\n', JSON.stringify(userRequest, null, 2));
+
   // Create the parameters for the WriteGetObjectResponse request.
   const params = {
     RequestRoute: outputRoute,
@@ -42,8 +44,14 @@ exports.handler = async (event) => {
     return { statusCode: 200 };
   }
 
+  // Append the domain name to the object key.
+  // This is required for the S3 getObject request.
+  // Get the domain from the forwarded host, is this going to be reliable?
+  const forwardedHost = userRequest.headers['X-Forwarded-Host'] ?? '';
+  const domain = forwardedHost.split(', ')[0];
+
   // If the user is authorized, try to get the object from S3.
-  const response = await getOrCreateObject(userRequest.url);
+  const response = await getOrCreateObject(userRequest.url, domain);
 
   // If the image is not found, return a 404 Not Found response.
   if (response.code === 'NoSuchKey') {

@@ -34,8 +34,11 @@ exports.DynamoDB = {
         // Return a mock promise that resolves to an example record.
         const { Key: { SiteAndGroupKey } } = params;
 
+        // Extract the group name from the SiteAndGroupKey, which uses a '#' as a delimiter.
+        const groupKey = SiteAndGroupKey.split('#')[1];
+
         return {
-          promise: async () => exampleRecords[SiteAndGroupKey],
+          promise: async () => exampleRecords[groupKey],
         };
       }),
     };
