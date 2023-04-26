@@ -1,5 +1,5 @@
 {
-    "name": "resize",
+    "name": "s3-object-lambda-app",
     "version": "1.0.0",
     "description": "",
     "main": "app.js",
@@ -7,7 +7,7 @@
       "test": "echo \"Error: no test specified\" && exit 1"
     },
     "keywords": [],
-    "author": "Greg Davis",
+    "author": "Jonathan Williams",
     "license": "MIT-0",
     "dependencies": {
       "aws-sdk": "2.1322.0",
