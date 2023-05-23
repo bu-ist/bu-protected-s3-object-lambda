@@ -4,7 +4,7 @@ const rangeSets = require('./ranges.json');
 function checkNetworkAccess(rules, headers) {
   // Get the user ip address from the headers, with a default value of an empty string.
   const {
-    'X-Real-IP': userIp = '',
+    'X-Real-Ip': userIp = '',
   } = headers;
 
   // Get the campus names from the rules object that stores network rules, with a default value of an empty array.
