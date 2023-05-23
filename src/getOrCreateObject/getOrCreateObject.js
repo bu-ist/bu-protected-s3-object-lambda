@@ -1,5 +1,6 @@
 /* eslint-disable import/no-unresolved */
 const { S3 } = require('aws-sdk');
+const { lookupCustomCrop } = require('./resizeAndSave/lookupCustomCrop');
 const { resizeAndSave } = require('./resizeAndSave');
 
 const bucketName = process.env.ORIGINAL_BUCKET;
@@ -24,13 +25,35 @@ async function tryGetObject(s3Key) {
 
 async function getOrCreateObject(url, domain) {
   // Get the pathname from the URL.
-  const { pathname } = new URL(url);
+  const { pathname, searchParams } = new URL(url);
   // Get the size match from the pathname.
   const sizeMatch = pathname.match(/-(\d+)x(\d+)\.(jpg|jpeg|png|gif)$/);
+
+  // Get the crop related query parameters from the URL.
+  const paramCrop = searchParams.get('resize-position') ?? false;
+
+  // Get any crop rules that may match the database.
+  const dbCropResponse = await lookupCustomCrop(url, domain, sizeMatch);
+
+  const dbCrop = dbCropResponse ? dbCropResponse.crop : false;
+
+  let dbCropString = '';
+  if (Array.isArray(dbCrop)) {
+    dbCropString = dbCrop.filter((position) => ['top', 'bottom', 'left', 'right'].includes(position)).toString();
+  }
+
+  // If there is a crop query param, use it, otherwise use the crop from the database.
+  const crop = paramCrop || dbCropString;
 
   // The s3 key is dependent on whether the image is an original or a render.
   // Prepend the appropriate path root to the pathname, based on the sizeMatch.
   let s3Key = `${sizeMatch ? RENDER_PATH_ROOT : ORIGINAL_PATH_ROOT}/${domain}${pathname}`;
+
+  // If there is a crop query param, add it to the s3 key.
+  if (crop) {
+    const pathWithoutExtension = pathname.replace(/\.[^/.]+$/, '');
+    s3Key = `${RENDER_PATH_ROOT}/${domain}${pathWithoutExtension}*crop-${crop}.${sizeMatch[3]}`;
+  }
 
   // Remove double slashes from the s3 key, in the case of a missing domain.... this shouldn't be necessary there has to be a better way.
   s3Key = s3Key.replace(/\/\//g, '/');
@@ -52,7 +75,7 @@ async function getOrCreateObject(url, domain) {
       return response;
     }
     // If there is an original, resize the image data with sharp and save it for future requests.
-    const resized = await resizeAndSave(originalResponse, `/${domain}${originalPath}`, sizeMatch);
+    const resized = await resizeAndSave(originalResponse, `/${domain}${originalPath}`, sizeMatch, crop);
     // Return the resized image response, formatted as an S3 getObject response.
     return {
       Body: resized,

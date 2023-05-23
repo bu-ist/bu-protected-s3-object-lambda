@@ -19,13 +19,24 @@ function getOriginalS3Key(url) {
 }
 
 // Resize and save the image to S3, then return the resized image data.
-async function resizeAndSave(data, originalPath, sizeMatch) {
+async function resizeAndSave(data, originalPath, sizeMatch, crop) {
   // Get the width and height from the sizeMatch as integers.
   const width = parseInt(sizeMatch[1], 10);
   const height = parseInt(sizeMatch[2], 10);
 
+  // Only set custom options if the crop query param is set.
+  // We should probably validate the crop query param here.....
+  const options = !crop ? {} : {
+    fit: 'cover',
+    position: sharp.position[crop],
+  };
+
   // Resize the image data with sharp.
-  const resized = await sharp(data.Body).resize({ width, height }).withMetadata();
+  const resized = await sharp(data.Body).resize({
+    width,
+    height,
+    ...options,
+  }).withMetadata();
 
   // Strip file extension from the original s3Key.
   const pathWithoutExtension = originalPath.replace(/\.[^/.]+$/, '');
@@ -36,7 +47,7 @@ async function resizeAndSave(data, originalPath, sizeMatch) {
   // Save the resized image to S3, next to the original image.
   await s3.putObject({
     Bucket: bucketName,
-    Key: `${RENDER_PATH_ROOT}${pathWithoutExtension}-${width}x${height}.${sizeMatch[3]}`,
+    Key: `${RENDER_PATH_ROOT}${pathWithoutExtension}-${width}x${height}${crop ? `*crop-${crop}` : ''}.${sizeMatch[3]}`,
     Body: resizedBuffer,
     ContentType: data.ContentType,
     Metadata: {
