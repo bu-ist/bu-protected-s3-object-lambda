@@ -53,3 +53,12 @@ exports.DynamoDB = {
     };
   },
 };
+
+exports.S3 = jest.fn(() => ({
+  getObject: jest.fn((params) => {
+    console.log('params', params);
+    return {
+      promise: async () => ({ Body: 'test' }),
+    };
+  }),
+}));
