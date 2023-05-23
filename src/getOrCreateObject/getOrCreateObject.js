@@ -29,12 +29,21 @@ async function getOrCreateObject(url, domain) {
   // Get the size match from the pathname.
   const sizeMatch = pathname.match(/-(\d+)x(\d+)\.(jpg|jpeg|png|gif)$/);
 
-  // Get the crop query param from the URL.
-  const crop = searchParams.get('crop') ?? false;
+  // Get the crop related query parameters from the URL.
+  const paramCrop = searchParams.get('resize-position') ?? false;
 
-  const dbCrop = await lookupCustomCrop(url, domain, sizeMatch);
+  // Get any crop rules that may match the database.
+  const dbCropResponse = await lookupCustomCrop(url, domain, sizeMatch);
 
-  console.log('dbCrop:', dbCrop);
+  const dbCrop = dbCropResponse ? dbCropResponse.crop : false;
+
+  let dbCropString = '';
+  if (Array.isArray(dbCrop)) {
+    dbCropString = dbCrop.filter((position) => ['top', 'bottom', 'left', 'right'].includes(position)).toString();
+  }
+
+  // If there is a crop query param, use it, otherwise use the crop from the database.
+  const crop = paramCrop || dbCropString;
 
   // The s3 key is dependent on whether the image is an original or a render.
   // Prepend the appropriate path root to the pathname, based on the sizeMatch.
