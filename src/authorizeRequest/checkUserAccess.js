@@ -1,9 +1,9 @@
 function checkUserAccess(rules, headers) {
   // Destructure the header object to get the shib attributes, with defaults.
   const {
-    eppn = '',
-    'primary-affiliation': userAffiliation = '',
-    entitlement: userEntitlements = [],
+    Eppn: eppn = '',
+    'Primary-Affiliation': userAffiliation = '',
+    Entitlement: userEntitlements = [],
   } = headers;
 
   // Get the userName as the unscoped eppn ( e.g. the email without the @domain).

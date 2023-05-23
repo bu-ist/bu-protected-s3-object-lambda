@@ -16,7 +16,7 @@ async function authorizeRequest(userRequest) {
   });
 
   const {
-    eppn = '',
+    Eppn: eppn = '',
     'X-Forwarded-Host': forwardedHost = '',
   } = headers;
 

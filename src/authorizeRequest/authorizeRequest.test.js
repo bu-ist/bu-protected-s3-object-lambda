@@ -6,7 +6,7 @@ describe('authorizeRequest', () => {
     const userRequest = {
       url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/entire-bu-community/image.jpg',
       headers: {
-        eppn: 'testUser@bu.edu',
+        Eppn: 'testUser@bu.edu',
         'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
       },
     };
@@ -30,7 +30,7 @@ describe('authorizeRequest', () => {
     const userRequest = {
       url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/somegroup/image.jpg',
       headers: {
-        eppn: 'user2@bu.edu',
+        Eppn: 'user2@bu.edu',
         'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
       },
     };
@@ -47,7 +47,7 @@ describe('authorizeRequest', () => {
     const userRequest = {
       url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/files/__restricted/somegroup/image.jpg',
       headers: {
-        eppn: 'user2@bu.edu',
+        Eppn: 'user2@bu.edu',
         'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
       },
     };
@@ -60,7 +60,7 @@ describe('authorizeRequest', () => {
     const userRequest = {
       url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/somegroup/image.jpg',
       headers: {
-        'X-Real-IP': '128.197.30.30',
+        'X-Real-Ip': '128.197.30.30',
         'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
       },
     };
@@ -72,7 +72,7 @@ describe('authorizeRequest', () => {
     const userRequest = {
       url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/somegroup/image.jpg',
       headers: {
-        'X-Real-IP': '127.0.0.1',
+        'X-Real-Ip': '127.0.0.1',
         'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
       },
     };
@@ -84,7 +84,7 @@ describe('authorizeRequest', () => {
     const userRequest = {
       url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/othergroup/image.jpg',
       headers: {
-        'X-Real-IP': '128.197.30.30',
+        'X-Real-Ip': '128.197.30.30',
         'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
       },
     };
