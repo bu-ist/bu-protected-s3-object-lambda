@@ -1,6 +1,11 @@
 const { DynamoDB } = require('aws-sdk');
 
 async function lookupCustomCrop(url, domain, sizeMatch) {
+  // If there is no size match, there is no custom crop so don't check the database.
+  if (!sizeMatch) {
+    return null;
+  }
+
   // Instantiate a DynamoDB client.
   const dynamoDb = new DynamoDB.DocumentClient({
     apiVersion: '2012-08-10',
