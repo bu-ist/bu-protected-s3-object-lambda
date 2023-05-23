@@ -1,6 +1,12 @@
 const { checkNetworkAccess } = require('./checkNetworkAccess');
 
 describe('checkNetworkAccess', () => {
+  it('should return true if the user network IP address is in the allowed ranges from the crc vpn segment', () => {
+    const headers = { 'X-Real-Ip': '168.122.75.89' };
+    const rules = { ranges: ['crc'] };
+    expect(checkNetworkAccess(rules, headers)).toBe(true);
+  });
+
   it('should return true if the user network IP address is in the allowed ranges from the crc campus', () => {
     const headers = { 'X-Real-Ip': '128.197.30.30' };
     const rules = { ranges: ['crc'] };
