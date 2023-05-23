@@ -25,6 +25,12 @@ const exampleRecords = {
   },
 };
 
+const exampleSizes = {
+  Item: {
+    sizes: JSON.stringify({ thumbnail: { width: 150, height: 150, crop: ['top'] } }),
+  },
+};
+
 exports.config = {};
 
 exports.DynamoDB = {
@@ -35,10 +41,13 @@ exports.DynamoDB = {
         const { Key: { SiteAndGroupKey } } = params;
 
         // Extract the group name from the SiteAndGroupKey, which uses a '#' as a delimiter.
-        const groupKey = SiteAndGroupKey.split('#')[1];
+        const [compKey, compValue] = SiteAndGroupKey.split('#');
+
+        // Return a size object for the SIZES# group key, and a ruleset for anything else.
+        const response = compKey.startsWith('SIZES') ? exampleSizes : exampleRecords[compValue];
 
         return {
-          promise: async () => exampleRecords[groupKey],
+          promise: async () => response,
         };
       }),
     };
