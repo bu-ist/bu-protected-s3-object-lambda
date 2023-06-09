@@ -44,6 +44,9 @@ async function resizeAndSave(data, originalPath, sizeMatch, crop) {
   // Get the resized image data as a buffer.
   const resizedBuffer = await resized.toBuffer();
 
+  // Encode the original path, so that it can be used in the metadata.
+  const encodedPath = encodeURI(originalPath);
+
   // Save the resized image to S3, next to the original image.
   await s3.putObject({
     Bucket: bucketName,
@@ -51,7 +54,7 @@ async function resizeAndSave(data, originalPath, sizeMatch, crop) {
     Body: resizedBuffer,
     ContentType: data.ContentType,
     Metadata: {
-      'original-key': `${ORIGINAL_PATH_ROOT}${originalPath}`,
+      'original-key': `${ORIGINAL_PATH_ROOT}${encodedPath}`,
     },
   }).promise();
 
