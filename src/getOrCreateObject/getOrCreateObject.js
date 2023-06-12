@@ -29,6 +29,9 @@ async function getOrCreateObject(url, domain) {
   // Get the size match from the pathname.
   const sizeMatch = pathname.match(/-(\d+)x(\d+)\.(jpg|jpeg|png|gif)$/);
 
+  // Decode the pathname for unicode characters.
+  const decodedPathname = decodeURIComponent(pathname);
+
   // Get the crop related query parameters from the URL.
   const paramCrop = searchParams.get('resize-position') ?? false;
 
@@ -47,11 +50,11 @@ async function getOrCreateObject(url, domain) {
 
   // The s3 key is dependent on whether the image is an original or a render.
   // Prepend the appropriate path root to the pathname, based on the sizeMatch.
-  let s3Key = `${sizeMatch ? RENDER_PATH_ROOT : ORIGINAL_PATH_ROOT}/${domain}${pathname}`;
+  let s3Key = `${sizeMatch ? RENDER_PATH_ROOT : ORIGINAL_PATH_ROOT}/${domain}${decodedPathname}`;
 
   // If there is a crop query param, add it to the s3 key.
   if (crop) {
-    const pathWithoutExtension = pathname.replace(/\.[^/.]+$/, '');
+    const pathWithoutExtension = decodedPathname.replace(/\.[^/.]+$/, '');
     s3Key = `${RENDER_PATH_ROOT}/${domain}${pathWithoutExtension}*crop-${crop}.${sizeMatch[3]}`;
   }
 
@@ -66,7 +69,7 @@ async function getOrCreateObject(url, domain) {
   // if the image is not found, and there is a size match, then resize the image and save it to S3.
   if (response.code === 'NoSuchKey' && sizeMatch) {
     // Reconstruct what the original image s3 key would be, by removing the image size from the URL.
-    const originalPath = pathname.replace(/-(\d+)x(\d+)\.(jpg|jpeg|png|gif)$/, '.$3');
+    const originalPath = decodedPathname.replace(/-(\d+)x(\d+)\.(jpg|jpeg|png|gif)$/, '.$3');
     const originalKey = `${ORIGINAL_PATH_ROOT}/${domain}${originalPath}`;
 
     const originalResponse = await tryGetObject(originalKey);
