@@ -1,4 +1,9 @@
-const { DynamoDB } = require('aws-sdk');
+const {
+        DynamoDBDocument
+      } = require("@aws-sdk/lib-dynamodb"),
+      {
+        DynamoDB
+      } = require("@aws-sdk/client-dynamodb");
 
 async function lookupCustomCrop(url, domain, sizeMatch) {
   // If there is no size match, there is no custom crop so don't check the database.
@@ -7,12 +12,12 @@ async function lookupCustomCrop(url, domain, sizeMatch) {
   }
 
   // Instantiate a DynamoDB client.
-  const dynamoDb = new DynamoDB.DocumentClient({
+  const dynamoDb = DynamoDBDocument.from(new DynamoDB({
     apiVersion: '2012-08-10',
     sslEnabled: false,
     paramValidation: false,
     convertResponseTypes: false,
-  });
+  }));
 
   // Get the dynamodb table name from the environment.
   const tableName = process.env.DYNAMODB_TABLE;
@@ -31,7 +36,7 @@ async function lookupCustomCrop(url, domain, sizeMatch) {
     },
   };
 
-  const { Item = null } = await dynamoDb.get(params).promise();
+  const { Item = null } = await dynamoDb.get(params);
 
   if (!Item) {
     return null;

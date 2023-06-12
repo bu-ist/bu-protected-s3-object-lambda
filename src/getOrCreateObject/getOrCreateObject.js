@@ -1,5 +1,7 @@
 /* eslint-disable import/no-unresolved */
-const { S3 } = require('aws-sdk');
+const {
+  S3
+} = require("@aws-sdk/client-s3");
 const { lookupCustomCrop } = require('./resizeAndSave/lookupCustomCrop');
 const { resizeAndSave } = require('./resizeAndSave');
 
@@ -16,7 +18,7 @@ async function tryGetObject(s3Key) {
     response = await s3.getObject({
       Bucket: bucketName,
       Key: s3Key,
-    }).promise();
+    });
   } catch (error) {
     return error;
   }

@@ -1,6 +1,8 @@
 // first example here: https://docs.aws.amazon.com/AmazonS3/latest/userguide/olap-writing-lambda.html
 
-const { S3 } = require('aws-sdk');
+const {
+  S3
+} = require("@aws-sdk/client-s3");
 
 const { authorizeRequest } = require('./authorizeRequest/authorizeRequest');
 const { getOrCreateObject } = require('./getOrCreateObject/getOrCreateObject');
@@ -38,7 +40,7 @@ exports.handler = async (event) => {
     params.StatusCode = 403;
     params.ErrorMessage = 'Access Denied';
 
-    await s3.writeGetObjectResponse(params).promise();
+    await s3.writeGetObjectResponse(params);
 
     // Exit the Lambda function (the status code is for the lambda, not the user response).
     return { statusCode: 200 };
@@ -64,7 +66,7 @@ exports.handler = async (event) => {
     params.CacheControl = isPublic ? 'max-age=300' : 'max-age=0';
   }
 
-  await s3.writeGetObjectResponse(params).promise();
+  await s3.writeGetObjectResponse(params);
 
   // Exit the Lambda function.
   return { statusCode: 200 };

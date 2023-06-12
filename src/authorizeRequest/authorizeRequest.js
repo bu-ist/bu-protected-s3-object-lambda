@@ -1,4 +1,9 @@
-const { DynamoDB } = require('aws-sdk');
+const {
+        DynamoDBDocument
+      } = require("@aws-sdk/lib-dynamodb"),
+      {
+        DynamoDB
+      } = require("@aws-sdk/client-dynamodb");
 
 const { checkUserAccess } = require('./checkUserAccess');
 const { checkNetworkAccess } = require('./checkNetworkAccess/checkNetworkAccess');
@@ -8,12 +13,12 @@ async function authorizeRequest(userRequest) {
   const { url, headers } = userRequest;
 
   // Instantiate a DynamoDB client.
-  const dynamoDb = new DynamoDB.DocumentClient({
+  const dynamoDb = DynamoDBDocument.from(new DynamoDB({
     apiVersion: '2012-08-10',
     sslEnabled: false,
     paramValidation: false,
     convertResponseTypes: false,
-  });
+  }));
 
   const {
     Eppn: eppn = '',
@@ -57,7 +62,7 @@ async function authorizeRequest(userRequest) {
   const { Item } = await dynamoDb.get({
     TableName: tableName,
     Key: { SiteAndGroupKey: siteAndGroupKey },
-  }).promise();
+  });
 
   if (Item == null) {
     // If the group rules are not found, log the error then deny access.
