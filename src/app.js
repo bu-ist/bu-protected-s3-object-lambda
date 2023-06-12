@@ -56,7 +56,7 @@ exports.handler = async (event) => {
   const response = await getOrCreateObject(userRequest.url, domain);
 
   // If the image is not found, return a 404 Not Found response.
-  if (response.code === 'NoSuchKey') {
+  if (response.Code === 'NoSuchKey') {
     params.ErrorMessage = 'Not Found';
     params.StatusCode = 404;
   } else {

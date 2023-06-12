@@ -69,14 +69,14 @@ async function getOrCreateObject(url, domain) {
   const response = await tryGetObject(s3Key);
 
   // if the image is not found, and there is a size match, then resize the image and save it to S3.
-  if (response.code === 'NoSuchKey' && sizeMatch) {
+  if (response.Code === 'NoSuchKey' && sizeMatch) {
     // Reconstruct what the original image s3 key would be, by removing the image size from the URL.
     const originalPath = decodedPathname.replace(/-(\d+)x(\d+)\.(jpg|jpeg|png|gif)$/, '.$3');
     const originalKey = `${ORIGINAL_PATH_ROOT}/${domain}${originalPath}`;
 
     const originalResponse = await tryGetObject(originalKey);
     // If there's no original image, then return the 404 response.
-    if (originalResponse.code === 'NoSuchKey') {
+    if (originalResponse.Code === 'NoSuchKey') {
       return response;
     }
     // If there is an original, resize the image data with sharp and save it for future requests.
