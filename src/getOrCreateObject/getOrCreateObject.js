@@ -1,7 +1,5 @@
 /* eslint-disable import/no-unresolved */
-const {
-  S3
-} = require("@aws-sdk/client-s3");
+const { S3 } = require("@aws-sdk/client-s3");
 const { lookupCustomCrop } = require('./resizeAndSave/lookupCustomCrop');
 const { resizeAndSave } = require('./resizeAndSave');
 

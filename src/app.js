@@ -1,8 +1,6 @@
 // first example here: https://docs.aws.amazon.com/AmazonS3/latest/userguide/olap-writing-lambda.html
 
-const {
-  S3
-} = require("@aws-sdk/client-s3");
+const { S3 } = require("@aws-sdk/client-s3");
 
 const { authorizeRequest } = require('./authorizeRequest/authorizeRequest');
 const { getOrCreateObject } = require('./getOrCreateObject/getOrCreateObject');

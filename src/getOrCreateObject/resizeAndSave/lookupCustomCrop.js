@@ -1,9 +1,5 @@
-const {
-        DynamoDBDocument
-      } = require("@aws-sdk/lib-dynamodb"),
-      {
-        DynamoDB
-      } = require("@aws-sdk/client-dynamodb");
+const { DynamoDBDocument } = require("@aws-sdk/lib-dynamodb");
+const { DynamoDB } = require("@aws-sdk/client-dynamodb");
 
 async function lookupCustomCrop(url, domain, sizeMatch) {
   // If there is no size match, there is no custom crop so don't check the database.
