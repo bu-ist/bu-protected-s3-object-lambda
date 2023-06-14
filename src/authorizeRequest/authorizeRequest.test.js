@@ -1,4 +1,45 @@
+const { mockClient } = require('aws-sdk-client-mock');
+const { DynamoDBDocumentClient, GetCommand } = require("@aws-sdk/lib-dynamodb");
+
+const ddbMock = mockClient(DynamoDBDocumentClient);
+
 const { authorizeRequest } = require('./authorizeRequest');
+
+// Table name is not relevant for these tests, but has to exist for the mocked ddb client.
+process.env.DYNAMODB_TABLE = 'test-table';
+
+// Mock the ddb client.
+ddbMock.on(GetCommand, {
+  Key: { SiteAndGroupKey: 'example.host.bu.edu/somesite#somegroup' },
+}).resolves({
+  Item: {
+    rules: JSON.stringify({
+      users: ['user1', 'user2', 'test', 'test2'],
+      states: ['faculty', 'staff'],
+      entitlements: ['https://iam.bu.edu/reg/college/com'],
+      ranges: ['crc'],
+      satisfy_all: false,
+    }),
+  },
+}).on(GetCommand, {
+  Key: { SiteAndGroupKey: 'example.host.bu.edu/somesite#othergroup' },
+}).resolves({
+  Item: {
+    rules: JSON.stringify({
+      users: ['user1', 'user2', 'test', 'test2'],
+      ranges: ['crc'],
+      satisfy_all: true,
+    }),
+  },
+}).on(GetCommand, {
+  Key: { SiteAndGroupKey: 'example.host.bu.edu/#somegroup' },
+}).resolves({
+  Item: {
+    rules: JSON.stringify({
+      users: ['root_user'],
+    }),
+  },
+});
 
 describe('authorizeRequest', () => {
   // Entire community group tests.
@@ -43,11 +84,11 @@ describe('authorizeRequest', () => {
   // Entitlement tests.
 
   // Add a test for a root site vs a sub site.
-  it('should return true if the user is granted access by user name', async () => {
+  it('should return true if the user is granted access by user name for the root site', async () => {
     const userRequest = {
       url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/files/__restricted/somegroup/image.jpg',
       headers: {
-        Eppn: 'user2@bu.edu',
+        Eppn: 'root_user@bu.edu',
         'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
       },
     };
