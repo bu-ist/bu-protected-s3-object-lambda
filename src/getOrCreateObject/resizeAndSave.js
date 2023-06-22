@@ -1,5 +1,7 @@
-const { S3 } = require('aws-sdk');
+const { S3 } = require('@aws-sdk/client-s3');
 const sharp = require('sharp'); // Used for image resizing
+
+const { streamToString } = require('./resizeAndSave/streamToString');
 
 const bucketName = process.env.ORIGINAL_BUCKET;
 
@@ -31,8 +33,12 @@ async function resizeAndSave(data, originalPath, sizeMatch, crop) {
     position: sharp.position[crop],
   };
 
+  // Get the original image data as a buffer.
+  // This used to not be necessary but changed with the v3 S3 SDK.
+  const imageBuffer = await streamToString(data.Body);
+
   // Resize the image data with sharp.
-  const resized = await sharp(data.Body).resize({
+  const resized = await sharp(imageBuffer).resize({
     width,
     height,
     ...options,
@@ -56,7 +62,7 @@ async function resizeAndSave(data, originalPath, sizeMatch, crop) {
     Metadata: {
       'original-key': `${ORIGINAL_PATH_ROOT}${encodedPath}`,
     },
-  }).promise();
+  });
 
   return resized;
 }
