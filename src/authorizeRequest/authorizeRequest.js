@@ -1,5 +1,5 @@
-const { DynamoDBDocument } = require("@aws-sdk/lib-dynamodb");
-const { DynamoDB } = require("@aws-sdk/client-dynamodb");
+const { DynamoDBDocument } = require('@aws-sdk/lib-dynamodb');
+const { DynamoDB } = require('@aws-sdk/client-dynamodb');
 
 const { checkUserAccess } = require('./checkUserAccess');
 const { checkNetworkAccess } = require('./checkNetworkAccess/checkNetworkAccess');

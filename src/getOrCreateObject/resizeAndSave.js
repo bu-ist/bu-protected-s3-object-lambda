@@ -1,4 +1,4 @@
-const { S3 } = require("@aws-sdk/client-s3");
+const { S3 } = require('@aws-sdk/client-s3');
 const sharp = require('sharp'); // Used for image resizing
 
 const { streamToString } = require('./resizeAndSave/streamToString');
