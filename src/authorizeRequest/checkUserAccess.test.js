@@ -10,45 +10,45 @@ const exampleUserRules = {
 describe('checkUserAccess', () => {
   it('should return false if there is no logged in user', () => {
     const headers = {
-      'X-Bu-Shib-Username': '',
-      'X-Bu-Shib-Primary-Affiliation': '',
-      'X-Bu-Shib-Entitlement': [],
+      Eppn: '',
+      'Primary-Affiliation': '',
+      Entitlement: [],
     };
     expect(checkUserAccess(exampleUserRules, headers)).toBe(false);
   });
 
   it('should return false if the user attibutes dont match the rules', () => {
     const headers = {
-      'X-Bu-Shib-Username': 'not-listed-user',
-      'X-Bu-Shib-Primary-Affiliation': 'faculty',
-      'X-Bu-Shib-Entitlement': ['not-an-entitlement', 'notentitlement2'],
+      Eppn: 'not-listed-user@bu.edu',
+      'Primary-Affiliation': 'faculty',
+      Entitlement: ['not-an-entitlement', 'notentitlement2'],
     };
     expect(checkUserAccess(exampleUserRules, headers)).toBe(false);
   });
 
   it('should return true if the user is in the list of users', () => {
     const headers = {
-      buPrincipalNameID: 'testuser',
-      affiliation: '',
-      entitlement: [],
+      Eppn: 'testuser@bu.edu',
+      'Primary-Affiliation': '',
+      Entitlement: [],
     };
     expect(checkUserAccess(exampleUserRules, headers)).toBe(true);
   });
 
   it('should return true if the user is in the list of affiliations', () => {
     const headers = {
-      buPrincipalNameID: 'someuser-not-in-the-list',
-      affiliation: 'staff',
-      entitlement: [],
+      Eppn: 'someuser-not-in-the-list@bu.edu',
+      'Primary-Affiliation': 'staff',
+      Entitlement: [],
     };
     expect(checkUserAccess(exampleUserRules, headers)).toBe(true);
   });
 
   it('should return true if the user has an entitlement', () => {
     const headers = {
-      buPrincipalNameID: 'someuser-not-in-the-list',
-      affiliation: 'student',
-      entitlement: ['https://iam.bu.edu/entitlements/some-entitlement'],
+      Eppn: 'someuser-not-in-the-list@bu.edu',
+      'Primary-Affiliation': 'student',
+      Entitlement: ['https://iam.bu.edu/entitlements/some-entitlement'],
     };
     expect(checkUserAccess(exampleUserRules, headers)).toBe(true);
   });

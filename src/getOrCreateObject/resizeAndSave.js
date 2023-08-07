@@ -1,5 +1,7 @@
-const { S3 } = require('aws-sdk');
+const { S3 } = require('@aws-sdk/client-s3');
 const sharp = require('sharp'); // Used for image resizing
+
+const { streamToString } = require('./resizeAndSave/streamToString');
 
 const bucketName = process.env.ORIGINAL_BUCKET;
 
@@ -19,13 +21,28 @@ function getOriginalS3Key(url) {
 }
 
 // Resize and save the image to S3, then return the resized image data.
-async function resizeAndSave(data, originalPath, sizeMatch) {
+async function resizeAndSave(data, originalPath, sizeMatch, crop) {
   // Get the width and height from the sizeMatch as integers.
   const width = parseInt(sizeMatch[1], 10);
   const height = parseInt(sizeMatch[2], 10);
 
+  // Only set custom options if the crop query param is set.
+  // We should probably validate the crop query param here.....
+  const options = !crop ? {} : {
+    fit: 'cover',
+    position: sharp.position[crop],
+  };
+
+  // Get the original image data as a buffer.
+  // This used to not be necessary but changed with the v3 S3 SDK.
+  const imageBuffer = await streamToString(data.Body);
+
   // Resize the image data with sharp.
-  const resized = await sharp(data.Body).resize({ width, height }).withMetadata();
+  const resized = await sharp(imageBuffer).resize({
+    width,
+    height,
+    ...options,
+  }).withMetadata();
 
   // Strip file extension from the original s3Key.
   const pathWithoutExtension = originalPath.replace(/\.[^/.]+$/, '');
@@ -33,16 +50,19 @@ async function resizeAndSave(data, originalPath, sizeMatch) {
   // Get the resized image data as a buffer.
   const resizedBuffer = await resized.toBuffer();
 
+  // Encode the original path, so that it can be used in the metadata.
+  const encodedPath = encodeURI(originalPath);
+
   // Save the resized image to S3, next to the original image.
   await s3.putObject({
     Bucket: bucketName,
-    Key: `${RENDER_PATH_ROOT}${pathWithoutExtension}-${width}x${height}.${sizeMatch[3]}`,
+    Key: `${RENDER_PATH_ROOT}${pathWithoutExtension}-${width}x${height}${crop ? `*crop-${crop}` : ''}.${sizeMatch[3]}`,
     Body: resizedBuffer,
     ContentType: data.ContentType,
     Metadata: {
-      'original-key': `${ORIGINAL_PATH_ROOT}${originalPath}`,
+      'original-key': `${ORIGINAL_PATH_ROOT}${encodedPath}`,
     },
-  }).promise();
+  });
 
   return resized;
 }

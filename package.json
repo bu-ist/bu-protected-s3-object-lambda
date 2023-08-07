@@ -17,6 +17,10 @@
   },
   "homepage": "https://github.com/bu-ist/bu-protected-s3-object-lambda#readme",
   "devDependencies": {
+    "@aws-sdk/client-dynamodb": "^3.351.0",
+    "@aws-sdk/client-s3": "^3.352.0",
+    "@aws-sdk/lib-dynamodb": "^3.351.0",
+    "aws-sdk-client-mock": "^2.1.1",
     "eslint": "^8.34.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.27.5",

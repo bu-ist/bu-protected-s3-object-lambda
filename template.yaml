@@ -91,6 +91,16 @@ Resources:
                 - !Sub arn:aws:s3-object-lambda:${AWS::Region}:${AWS::AccountId}:accesspoint/${S3ObjectLambdaAccessPoint}
                 - !Sub arn:aws:s3-object-lambda:${AWS::Region}:${AWS::AccountId}:accesspoint/${S3ObjectLambdaAccessPoint}/*
               Action: "*"
+            # Allow user to write rules to the DynamoDB table.
+            - Effect: Allow
+              Resource: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${AccessControlDynamoDB}
+              Action: 
+                - dynamodb:PutItem
+                - dynamodb:GetItem
+                - dynamodb:DeleteItem
+                - dynamodb:UpdateItem
+                - dynamodb:Query
+                - dynamodb:Scan
 
   # Access key for the bucket user. Will be stored in secrets manager.
   AccessKey:
