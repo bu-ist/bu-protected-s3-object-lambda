@@ -33,10 +33,11 @@ no-prompts = true
 [prod.deploy.parameters]
 region = "us-east-1"
 capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND"
-disable_rollback = true
-stack_name = "bu-wp-s3-object-lambda"
+disable_rollback = false
+stack_name = "wordpress-protected-s3-assets"
 confirm_changeset = false
+resolve_s3 = true
 tags = "Service=\"websites\" Function=\"wordpress\" Project=\"bu-wp-to-cloud\" Landscape=\"prod\""
-s3_bucket = "aws-sam-cli-managed-dev-pi-artifactsloggingbucket-mk5y62po4loh"
 image_repositories = []
+no-prompts = true
 
