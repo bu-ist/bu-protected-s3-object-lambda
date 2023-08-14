@@ -1,4 +1,4 @@
-# -----------------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------
 # 
 # This is the production continuous integration build github action.
 # Activates on any commit to the main branch.
@@ -7,7 +7,7 @@
 #       https://aws.amazon.com/blogs/security/use-iam-roles-to-connect-github-actions-to-actions-in-aws/
 #       https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services
 #
-# -----------------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------
 
 name: 
   Wordpress protected assets deploy to prod
