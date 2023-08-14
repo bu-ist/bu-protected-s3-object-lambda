@@ -45,6 +45,8 @@
       steps:
         - uses: aws-actions/setup-sam@v2
         - uses: aws-actions/configure-aws-credentials@v2
+          with: 
+            aws-region: ${{ env.AWS_REGION }}
         - run: sam build --config-env prod
   
   
