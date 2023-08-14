@@ -46,6 +46,8 @@
         - uses: aws-actions/setup-sam@v2
         - uses: aws-actions/configure-aws-credentials@v2
           with: 
+            role-to-assume: arn:aws:iam::115619461932:role/WordpressProtectedAssetsGithubActionsCloudformingRole
+            role-session-name: GitHub_to_AWS_via_FederatedOIDC
             aws-region: ${{ env.AWS_REGION }}
         - run: sam build --config-env prod
   
