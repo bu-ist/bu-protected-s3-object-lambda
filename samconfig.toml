@@ -33,7 +33,7 @@ no-prompts = true
 [prod.deploy.parameters]
 region = "us-east-1"
 capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND"
-disable_rollback = false
+disable_rollback = true
 stack_name = "wordpress-protected-s3-assets-prod"
 confirm_changeset = false
 resolve_s3 = true
