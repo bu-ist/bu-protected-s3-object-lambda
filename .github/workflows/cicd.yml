@@ -9,51 +9,58 @@
 #
 # ----------------------------------------------------------------------------------------------------------
 
-name: 
-  Wordpress protected assets deploy to prod
-
-on:
-  push:
-    branches:
-      - actions
-      # - main
-
-env:
-  AWS_REGION: us-east-1
-
-permissions: 
-  id-token: write   # This is required for requesting the JWT
-  contents: read    # This is required for actions/checkout
-
-jobs:
-
-  # 1) Run all unit tests
-  unit-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v2
-        with:
-          node-version: '18'
-      - run: npm ci
-      - run: npm test
-
-  # 2) Deploy to prod if tests pass
-  deploy:
-    runs-on: ubuntu-latest
-    needs: unit-tests
-    steps:
-      - uses: actions/checkout@v3
-      - uses: aws-actions/setup-sam@v2
-      - uses: aws-actions/configure-aws-credentials@v2
-        with: 
-          role-to-assume: arn:aws:iam::115619461932:role/WordpressProtectedAssetsGithubActionsCloudformingRole
-          role-session-name: GitHub_to_AWS_via_FederatedOIDC
-          aws-region: ${{ env.AWS_REGION }}
-      - run: aws sts get-caller-identity
-      - run: sam build --config-env prod
-      - run: sam deploy --config-env prod
-
-
-
-
+  name: 
+    Wordpress protected assets deploy to prod
+  
+  on:
+    push:
+      branches:
+        - actions
+        # - main
+  
+  env:
+    AWS_REGION: us-east-1
+  
+  permissions: 
+    id-token: write   # This is required for requesting the JWT
+    contents: read    # This is required for actions/checkout
+  
+  jobs:
+  
+    # 1) Run all unit tests
+    unit-tests:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v3
+        - uses: actions/setup-node@v2
+          with:
+            node-version: '18'
+        - run: npm ci
+        - run: npm test
+  
+    build:
+      runs-on: ubuntu-latest
+      needs: unit-tests
+      steps:
+        - uses: aws-actions/setup-sam@v2
+        - uses: aws-actions/configure-aws-credentials@v2
+        - run: sam build --config-env prod
+  
+  
+    # 2) Deploy to prod if tests pass
+    deploy:
+      runs-on: ubuntu-latest
+      needs: build
+      steps:
+        - uses: aws-actions/setup-sam@v2
+        - uses: aws-actions/configure-aws-credentials@v2
+          with: 
+            role-to-assume: arn:aws:iam::115619461932:role/WordpressProtectedAssetsGithubActionsCloudformingRole
+            role-session-name: GitHub_to_AWS_via_FederatedOIDC
+            aws-region: ${{ env.AWS_REGION }}
+        - run: sam deploy --config-env prod
+  
+  
+  
+  
+  
