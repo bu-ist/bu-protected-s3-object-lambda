@@ -34,7 +34,7 @@ no-prompts = true
 region = "us-east-1"
 capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND"
 disable_rollback = false
-stack_name = "wordpress-protected-s3-assets"
+stack_name = "wordpress-protected-s3-assets-prod"
 confirm_changeset = false
 resolve_s3 = true
 tags = "Service=\"websites\" Function=\"wordpress\" Project=\"bu-wp-to-cloud\" Landscape=\"prod\""
