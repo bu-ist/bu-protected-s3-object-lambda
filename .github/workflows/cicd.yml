@@ -35,8 +35,14 @@
         - uses: actions/setup-node@v2
           with:
             node-version: '18'
+        - uses: actions/cache@v3
+          with:
+            path: ~/
+            key: test_cache
         - run: npm ci
         - run: npm test
+        - run: echo $(pwd)
+        - run: ls -la
   
     # 2) Build the app 
     build:
@@ -44,11 +50,13 @@
       needs: unit-tests
       steps:
         - uses: aws-actions/setup-sam@v2
-        - uses: aws-actions/configure-aws-credentials@v2
-          with: 
-            role-to-assume: arn:aws:iam::115619461932:role/WordpressProtectedAssetsGithubActionsCloudformingRole
-            role-session-name: GitHub_to_AWS_via_FederatedOIDC
-            aws-region: ${{ env.AWS_REGION }}
+        - uses: actions/cache@v3
+          with:
+            path: ~/
+            key: test_cache
+        - run: ls -la ~/
+        - run: echo $(pwd)
+        - run: ls -la
         - run: sam build --config-env prod
   
   
@@ -58,6 +66,10 @@
       needs: build
       steps:
         - uses: aws-actions/setup-sam@v2
+        - uses: actions/cache@v3
+          with:
+            path: ~/
+            key: test_cache
         - uses: aws-actions/configure-aws-credentials@v2
           with: 
             role-to-assume: arn:aws:iam::115619461932:role/WordpressProtectedAssetsGithubActionsCloudformingRole
