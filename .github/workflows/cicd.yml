@@ -37,12 +37,10 @@
             node-version: '18'
         - uses: actions/cache@v3
           with:
-            path: ~/
-            key: test_cache
+            path: /home/runner/work/bu-protected-s3-object-lambda/bu-protected-s3-object-lambda
+            key: cached_workspace
         - run: npm ci
         - run: npm test
-        - run: echo $(pwd)
-        - run: ls -la
   
     # 2) Build the app 
     build:
@@ -52,11 +50,8 @@
         - uses: aws-actions/setup-sam@v2
         - uses: actions/cache@v3
           with:
-            path: ~/
-            key: test_cache
-        - run: ls -la ~/
-        - run: echo $(pwd)
-        - run: ls -la
+            path: /home/runner/work/bu-protected-s3-object-lambda/bu-protected-s3-object-lambda
+            key: cached_workspace
         - run: sam build --config-env prod
   
   
@@ -68,8 +63,8 @@
         - uses: aws-actions/setup-sam@v2
         - uses: actions/cache@v3
           with:
-            path: ~/
-            key: test_cache
+            path: /home/runner/work/bu-protected-s3-object-lambda/bu-protected-s3-object-lambda
+            key: cached_workspace
         - uses: aws-actions/configure-aws-credentials@v2
           with: 
             role-to-assume: arn:aws:iam::115619461932:role/WordpressProtectedAssetsGithubActionsCloudformingRole
