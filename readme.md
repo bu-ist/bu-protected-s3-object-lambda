@@ -71,9 +71,10 @@ NOTE: Upgrade to the latest AWS CLI version if you receive the following error w
 * [Introducing Amazon S3 Object Lambda – Use Your Code to Process Data as It Is Being Retrieved from S3](https://aws.amazon.com/blogs/aws/introducing-amazon-s3-object-lambda-use-your-code-to-process-data-as-it-is-being-retrieved-from-s3/)
 * [Transforming objects with S3 Object Lambda](https://docs.aws.amazon.com/AmazonS3/latest/userguide/transforming-objects.html)
 * [S3 Object Lambda pricing](https://aws.amazon.com/s3/pricing/)
+* [CI/CD](./docs/cicd.md)
 
 ## Cleanup
- 
+
 1. From the AWS Management Console, empty the S3 bucket that contains the example images.
 1. Delete the stack
     ```bash
