@@ -1,0 +1,74 @@
+# ----------------------------------------------------------------------------------------------------------
+# 
+# This is the production continuous integration build github action.
+# Activates on any commit to the main branch.
+#
+# ----------------------------------------------------------------------------------------------------------
+
+  name: 
+    Wordpress protected assets deploy to prod
+  
+  on:
+    push:
+      branches:
+        - main
+  
+  env:
+    AWS_REGION: us-east-1
+  
+  permissions: 
+    id-token: write   # This is required for requesting the JWT
+    contents: read    # This is required for actions/checkout
+  
+  jobs:
+  
+    # 1) Run all unit tests
+    test:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v3
+        - uses: actions/setup-node@v2
+          with:
+            node-version: '18'
+        - uses: actions/cache@v3
+          with:
+            path: /home/runner/work/bu-protected-s3-object-lambda/bu-protected-s3-object-lambda
+            key: cached_workspace
+        - run: npm ci
+        - run: npm test
+
+        
+    # 2) Build the app 
+    build:
+      runs-on: ubuntu-latest
+      needs: test
+      steps:
+        - uses: aws-actions/setup-sam@v2
+        - uses: actions/cache@v3
+          with:
+            path: /home/runner/work/bu-protected-s3-object-lambda/bu-protected-s3-object-lambda
+            key: cached_workspace
+        - run: sam build --config-env prod
+  
+  
+    # 2) Deploy to prod
+    deploy:
+      runs-on: ubuntu-latest
+      needs: build
+      steps:
+        - uses: aws-actions/setup-sam@v2
+        - uses: actions/cache@v3
+          with:
+            path: /home/runner/work/bu-protected-s3-object-lambda/bu-protected-s3-object-lambda
+            key: cached_workspace
+        - uses: aws-actions/configure-aws-credentials@v2
+          with: 
+            role-to-assume: arn:aws:iam::115619461932:role/WordpressProtectedAssetsGithubActionsCloudformingRole
+            role-session-name: GitHub_to_AWS_via_FederatedOIDC
+            aws-region: ${{ env.AWS_REGION }}
+        - run: sam deploy --config-env prod
+  
+  
+  
+  
+  
