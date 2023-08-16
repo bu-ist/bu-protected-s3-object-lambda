@@ -48,7 +48,7 @@
           with:
             path: /home/runner/work/bu-protected-s3-object-lambda/bu-protected-s3-object-lambda
             key: cached_workspace
-        - run: sam build --config-env prod
+        - run: sam build --config-env prod --use-container
   
   
     # 2) Deploy to prod
