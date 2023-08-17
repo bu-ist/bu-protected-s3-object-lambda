@@ -33,7 +33,7 @@
         - uses: actions/cache@v3
           with:
             path: /home/runner/work/bu-protected-s3-object-lambda/bu-protected-s3-object-lambda
-            key: cached_workspace
+            key: cache-${{ github.run_id }}-${{ github.run_attempt }}
         - run: npm ci
         - run: npm test
 
@@ -47,7 +47,7 @@
         - uses: actions/cache@v3
           with:
             path: /home/runner/work/bu-protected-s3-object-lambda/bu-protected-s3-object-lambda
-            key: cached_workspace
+            key: cache-${{ github.run_id }}-${{ github.run_attempt }}
         - run: sam build --config-env prod --use-container
   
   
@@ -60,7 +60,7 @@
         - uses: actions/cache@v3
           with:
             path: /home/runner/work/bu-protected-s3-object-lambda/bu-protected-s3-object-lambda
-            key: cached_workspace
+            key: cache-${{ github.run_id }}-${{ github.run_attempt }}
         - uses: aws-actions/configure-aws-credentials@v2
           with: 
             role-to-assume: arn:aws:iam::115619461932:role/WordpressProtectedAssetsGithubActionsCloudformingRole
