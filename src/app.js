@@ -4,8 +4,14 @@ const { S3 } = require('@aws-sdk/client-s3');
 
 const { authorizeRequest } = require('./authorizeRequest/authorizeRequest');
 const { getOrCreateObject } = require('./getOrCreateObject/getOrCreateObject');
+const { getProtectedSites } = require('./authorizeRequest/getProtectedSites');
 
 const s3 = new S3();
+
+// Cache protected sites to reduce DynamoDB calls.
+// Values declared outside of the handler function are reused for the lifetime of the container.
+const cachedProtectedSites = {};
+const cacheInterval = 60000; // one minute in milliseconds
 
 exports.handler = async (event) => {
   // Output the event details to CloudWatch Logs.
@@ -24,13 +30,32 @@ exports.handler = async (event) => {
     RequestToken: outputToken,
   };
 
+  // Get the protected sites, either from the cached value or from DynamoDB.
+  const now = Date.now();
+  if (Object.keys(cachedProtectedSites).length === 0 || now - cachedProtectedSites.timestamp > cacheInterval) {
+    // Load the protected sites from DynamoDB.
+    console.log('Loading protected sites from DynamoDB');
+    cachedProtectedSites.sites = await getProtectedSites();
+    cachedProtectedSites.timestamp = now;
+  } else {
+    console.log('didnt need to load protected sites from DynamoDB because they were cached');
+    console.log(JSON.stringify(cachedProtectedSites.sites));
+  }
+
+  // Get the domain from the forwarded host, is this going to be reliable?
+  const forwardedHost = userRequest.headers['X-Forwarded-Host'] ?? '';
+  const domain = forwardedHost.split(', ')[0];
+
+  // Check if the site is protected.
+  const siteRule = cachedProtectedSites.sites.find((site) => Object.keys(site)[0] === domain);
+
   // Check access restrictions.
   // Unrestricted items are always allowed, and should be sent with a cache control header to tell CloudFront to cache the image.
   // Will need to account for whole site protections here.
-  const isPublic = !userRequest.url.includes('__restricted');
+  const isPublic = !userRequest.url.includes('__restricted') && !siteRule;
 
   // Check if the user is authorized to access the object (always true for public items).
-  const authorized = isPublic ? true : await authorizeRequest(userRequest);
+  const authorized = isPublic ? true : await authorizeRequest(userRequest, siteRule);
 
   // If the user is not authorized, return a 403 Forbidden response.
   if (!authorized) {
@@ -43,12 +68,6 @@ exports.handler = async (event) => {
     // Exit the Lambda function (the status code is for the lambda, not the user response).
     return { statusCode: 200 };
   }
-
-  // Append the domain name to the object key.
-  // This is required for the S3 getObject request.
-  // Get the domain from the forwarded host, is this going to be reliable?
-  const forwardedHost = userRequest.headers['X-Forwarded-Host'] ?? '';
-  const domain = forwardedHost.split(', ')[0];
 
   // If the user is authorized, try to get the object from S3.
   const response = await getOrCreateObject(userRequest.url, domain);

@@ -4,7 +4,7 @@ const { DynamoDB } = require('@aws-sdk/client-dynamodb');
 const { checkUserAccess } = require('./checkUserAccess');
 const { checkNetworkAccess } = require('./checkNetworkAccess/checkNetworkAccess');
 
-async function authorizeRequest(userRequest) {
+async function authorizeRequest(userRequest, siteRule) {
   // Check if the user is authorized to access the object.
   const { url, headers } = userRequest;
 
@@ -32,7 +32,12 @@ async function authorizeRequest(userRequest) {
   const pathSegments = url.split('/');
 
   const indexOfRestricted = pathSegments.indexOf('__restricted');
-  const groupName = pathSegments[indexOfRestricted + 1];
+  let groupName = pathSegments[indexOfRestricted + 1];
+
+  // If there is a whole-site protection rule, the group name will be the value of the rule.
+  if (siteRule) {
+    groupName = Object.values(siteRule)[0];
+  }
 
   // Detect if this is the root site by the position of the __restricted segment.
   const isRootSite = indexOfRestricted < 5;
