@@ -46,8 +46,15 @@ exports.handler = async (event) => {
   const forwardedHost = userRequest.headers['X-Forwarded-Host'] ?? '';
   const domain = forwardedHost.split(', ')[0];
 
+  // This is repeated from authorizeRequest.js, should probably be refactored.
+  // Parse the path segments from the URL to check if this is a protected site.
+  const pathSegments = new URL(userRequest.url).pathname.split('/');
+  // If the 'files' segment is the second segment, this is a root site.
+  const isRootSite = pathSegments.indexOf('files') === 1;
+  const sitePath = isRootSite ? domain : `${domain}/${pathSegments[1]}`;
+
   // Check if the site is protected.
-  const siteRule = cachedProtectedSites.sites.find((site) => Object.keys(site)[0] === domain);
+  const siteRule = cachedProtectedSites.sites.find((site) => Object.keys(site)[0] === sitePath);
 
   // Check access restrictions.
   // Unrestricted items are always allowed, and should be sent with a cache control header to tell CloudFront to cache the image.
