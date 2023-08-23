@@ -39,7 +39,6 @@ exports.handler = async (event) => {
     cachedProtectedSites.timestamp = now;
   } else {
     console.log('didnt need to load protected sites from DynamoDB because they were cached');
-    console.log(JSON.stringify(cachedProtectedSites.sites));
   }
 
   // Get the domain from the forwarded host, is this going to be reliable?
