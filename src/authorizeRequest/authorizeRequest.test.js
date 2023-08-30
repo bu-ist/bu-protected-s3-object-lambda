@@ -132,4 +132,19 @@ describe('authorizeRequest', () => {
     const result = await authorizeRequest(userRequest);
     expect(result).toBe(false);
   });
+
+  it('should return false if the user is denied access by siteRule', async () => {
+    const userRequest = {
+      url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/2023/08/image.jpg',
+      headers: {
+        'X-Real-Ip': '127.0.0.1',
+        'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
+      },
+    };
+    const siteRule = {
+      'example.host.bu.edu/somesite': 'somegroup',
+    };
+    const result = await authorizeRequest(userRequest, siteRule);
+    expect(result).toBe(false);
+  });
 });

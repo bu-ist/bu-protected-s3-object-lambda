@@ -4,7 +4,7 @@ const { DynamoDB } = require('@aws-sdk/client-dynamodb');
 const { checkUserAccess } = require('./checkUserAccess');
 const { checkNetworkAccess } = require('./checkNetworkAccess/checkNetworkAccess');
 
-async function authorizeRequest(userRequest) {
+async function authorizeRequest(userRequest, siteRule) {
   // Check if the user is authorized to access the object.
   const { url, headers } = userRequest;
 
@@ -32,13 +32,23 @@ async function authorizeRequest(userRequest) {
   const pathSegments = url.split('/');
 
   const indexOfRestricted = pathSegments.indexOf('__restricted');
-  const groupName = pathSegments[indexOfRestricted + 1];
+  let groupName = pathSegments[indexOfRestricted + 1];
+  let isRootSite = indexOfRestricted ? indexOfRestricted < 5 : false;
+
+  // If there is a whole-site protection rule, the group name will be the value of the rule.
+  if (siteRule) {
+    groupName = Object.values(siteRule)[0];
+    // If there's nothing after the domain, then this is a root site.
+    isRootSite = Object.keys(siteRule)[0] === domain;
+  }
 
   // Detect if this is the root site by the position of the __restricted segment.
-  const isRootSite = indexOfRestricted < 5;
-
   // Not sure if this should be detected by position of '__restricted' or by proximity to 'files'.
-  const siteName = isRootSite ? '' : pathSegments[indexOfRestricted - 2];
+  let siteName = isRootSite ? '' : pathSegments[indexOfRestricted - 2];
+
+  if (siteRule) {
+    siteName = isRootSite ? '' : Object.keys(siteRule)[0].split('/')[1];
+  }
 
   // This still has problems with the root site, since there is no site name it will leave a useless trailing slash.
   const siteAndGroupKey = `${domain}/${siteName}#${groupName}`;
