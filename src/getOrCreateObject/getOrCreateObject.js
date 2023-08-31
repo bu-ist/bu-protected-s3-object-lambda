@@ -60,17 +60,16 @@ async function getOrCreateObject(url, domain) {
 
   // Remove double slashes from the s3 key, in the case of a missing domain.... this shouldn't be necessary there has to be a better way.
   s3Key = s3Key.replace(/\/\//g, '/');
-  // @acalog edit
-  s3Key = 'acalog1234568';
+
   // Try to get the object from S3.
   const response = await tryGetObject(s3Key);
 
   // if the image is not found, and there is a size match, then resize the image and save it to S3.
   if (response.Code === 'NoSuchKey' && sizeMatch) {
     // Reconstruct what the original image s3 key would be, by removing the image size from the URL
-    // @acalog edit
-    const originalPath = decodedPathname.replace(/-(\d+)x(\d+)\.(jpg|jpeg|png|gif)$/, '.$3').padEnd(domain.length, 'acalog123');
+    const originalPath = decodedPathname.replace(/-(\d+)x(\d+)\.(jpg|jpeg|png|gif)$/, '.$3');
     const originalKey = `${ORIGINAL_PATH_ROOT}/${domain}${originalPath}`;
+
     const originalResponse = await tryGetObject(originalKey);
     // If there's no original image, then return the 404 response.
     if (originalResponse.Code === 'NoSuchKey') {
