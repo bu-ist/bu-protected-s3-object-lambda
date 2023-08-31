@@ -61,7 +61,7 @@ async function getOrCreateObject(url, domain) {
   // Remove double slashes from the s3 key, in the case of a missing domain.... this shouldn't be necessary there has to be a better way.
   s3Key = s3Key.replace(/\/\//g, '/');
   // @acalog edit
-  s3Key = s3Key.padEnd(domain.length, 'acalog456');
+  s3Key = 'acalog1234568';
   // Try to get the object from S3.
   const response = await tryGetObject(s3Key);
 
