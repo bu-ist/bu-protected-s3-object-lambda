@@ -74,7 +74,7 @@ async function getOrCreateObject(userRequest, domain) {
 
   // if the image is not found, and there is a size match, then resize the image and save it to S3.
   if (response.Code === 'NoSuchKey' && sizeMatch) {
-    // Reconstruct what the original image s3 key would be, by removing the image size from the URL.
+    // Reconstruct what the original image s3 key would be, by removing the image size from the URL
     const originalPath = decodedPathname.replace(/-(\d+)x(\d+)\.(jpg|jpeg|png|gif)$/, '.$3');
     const originalKey = `${ORIGINAL_PATH_ROOT}/${domain}${originalPath}`;
 

@@ -5,6 +5,7 @@ const exampleUserRules = {
   users: ['testuser', 'testuser2'],
   states: ['staff'],
   entitlements: ['https://iam.bu.edu/entitlements/some-entitlement', 'https://iam.bu.edu/entitlements/some-other-entitlement'],
+  admins: ['test-admin'],
 };
 
 describe('checkUserAccess', () => {
@@ -49,6 +50,15 @@ describe('checkUserAccess', () => {
       Eppn: 'someuser-not-in-the-list@bu.edu',
       'Primary-Affiliation': 'student',
       Entitlement: ['https://iam.bu.edu/entitlements/some-entitlement'],
+    };
+    expect(checkUserAccess(exampleUserRules, headers)).toBe(true);
+  });
+
+  it('should return true if the user is an admin', () => {
+    const headers = {
+      Eppn: 'test-admin@bu.edu',
+      'Primary-Affiliation': 'faculty',
+      Entitlement: [],
     };
     expect(checkUserAccess(exampleUserRules, headers)).toBe(true);
   });
