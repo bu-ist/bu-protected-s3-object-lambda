@@ -76,7 +76,7 @@ exports.handler = async (event) => {
   }
 
   // If the user is authorized, try to get the object from S3.
-  const response = await getOrCreateObject(userRequest.url, domain);
+  const response = await getOrCreateObject(userRequest, domain);
 
   // If the image is not found, return a 404 Not Found response.
   if (response.Code === 'NoSuchKey') {
@@ -87,6 +87,18 @@ exports.handler = async (event) => {
     params.Body = response.Body;
     params.ContentType = response.ContentType;
     params.CacheControl = isPublic ? 'max-age=300' : 'max-age=0';
+    if(response.ContentLength) {
+      params.ContentLength = response.ContentLength;
+    }
+    if(response.ContentRange) {
+      params.ContentRange = response.ContentRange;
+    }
+    if(response.AcceptRanges) {
+      params.AcceptRanges = response.AcceptRanges;
+    }
+    if(response.Connection) {
+      params.Connection = response.Connection;
+    }
   }
 
   await s3.writeGetObjectResponse(params);

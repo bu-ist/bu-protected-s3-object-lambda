@@ -2,6 +2,7 @@
 const { S3 } = require('@aws-sdk/client-s3');
 const { lookupCustomCrop } = require('./resizeAndSave/lookupCustomCrop');
 const { resizeAndSave } = require('./resizeAndSave');
+const { isRangeRequest, tryGetObjectRange } = require('./MultipartObject')
 
 const bucketName = process.env.ORIGINAL_BUCKET;
 
@@ -23,8 +24,9 @@ async function tryGetObject(s3Key) {
   return response;
 }
 
-async function getOrCreateObject(url, domain) {
+async function getOrCreateObject(userRequest, domain) {
   // Get the pathname from the URL.
+  const { url } = userRequest;
   const { pathname, searchParams } = new URL(url);
   // Get the size match from the pathname.
   const sizeMatch = pathname.match(/-(\d+)x(\d+)\.(jpg|jpeg|png|gif)$/);
@@ -62,7 +64,13 @@ async function getOrCreateObject(url, domain) {
   s3Key = s3Key.replace(/\/\//g, '/');
 
   // Try to get the object from S3.
-  const response = await tryGetObject(s3Key);
+  let response;
+  if(isRangeRequest(userRequest)) {
+    response = await tryGetObjectRange(userRequest, s3Key);
+  }
+  else {
+    response = await tryGetObject(s3Key);
+  }
 
   // if the image is not found, and there is a size match, then resize the image and save it to S3.
   if (response.Code === 'NoSuchKey' && sizeMatch) {
