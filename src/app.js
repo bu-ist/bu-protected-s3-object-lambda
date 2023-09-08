@@ -1,5 +1,5 @@
+/* eslint-disable linebreak-style */
 // first example here: https://docs.aws.amazon.com/AmazonS3/latest/userguide/olap-writing-lambda.html
-
 const { S3 } = require('@aws-sdk/client-s3');
 
 const { authorizeRequest } = require('./authorizeRequest/authorizeRequest');
@@ -15,7 +15,7 @@ const cacheInterval = 60000; // one minute in milliseconds
 
 exports.handler = async (event) => {
   // Output the event details to CloudWatch Logs.
-  //console.log("Event:\n", JSON.stringify(event, null, 2));
+  // console.log("Event:\n", JSON.stringify(event, null, 2));
 
   // Retrieve the operation context object from the event.
   // This contains the info for the WriteGetObjectResponse request.
@@ -56,7 +56,7 @@ exports.handler = async (event) => {
   const siteRule = cachedProtectedSites.sites.find((site) => Object.keys(site)[0] === sitePath);
 
   // Check access restrictions.
-  // Unrestricted items are always allowed, and should be sent with a cache control header to tell CloudFront to cache the image.
+  // Unrestricted items are always allowed, and should be sent with a cache control header to tell CloudFront to cache the item.
   // Will need to account for whole site protections here.
   const isPublic = !userRequest.url.includes('__restricted') && !siteRule;
 
@@ -78,27 +78,19 @@ exports.handler = async (event) => {
   // If the user is authorized, try to get the object from S3.
   const response = await getOrCreateObject(userRequest, domain);
 
-  // If the image is not found, return a 404 Not Found response.
+  // If the object is not found, return a 404 Not Found response.
   if (response.Code === 'NoSuchKey') {
     params.ErrorMessage = 'Not Found';
     params.StatusCode = 404;
   } else {
-    // If the image is found, return the image data with a 200 OK response.
+    // If the object is found, return its data with a 200 OK response.
     params.Body = response.Body;
-    params.ContentType = response.ContentType;
     params.CacheControl = isPublic ? 'max-age=300' : 'max-age=0';
-    if(response.ContentLength) {
-      params.ContentLength = response.ContentLength;
-    }
-    if(response.ContentRange) {
-      params.ContentRange = response.ContentRange;
-    }
-    if(response.AcceptRanges) {
-      params.AcceptRanges = response.AcceptRanges;
-    }
-    if(response.Connection) {
-      params.Connection = response.Connection;
-    }
+    params.ContentType = response.ContentType ?? undefined;
+    params.ContentLength = response.ContentLength ?? undefined;
+    params.ContentRange = response.ContentRange ?? undefined;
+    params.AcceptRanges = response.AcceptRanges ?? undefined;
+    params.Connection = response.Connection ?? undefined;
   }
 
   await s3.writeGetObjectResponse(params);

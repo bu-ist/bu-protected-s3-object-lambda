@@ -2,7 +2,6 @@
 const { S3 } = require('@aws-sdk/client-s3');
 const { lookupCustomCrop } = require('./resizeAndSave/lookupCustomCrop');
 const { resizeAndSave } = require('./resizeAndSave');
-const { isRangeRequest, tryGetObjectRange } = require('./MultipartObject')
 
 const bucketName = process.env.ORIGINAL_BUCKET;
 
@@ -11,14 +10,24 @@ const { ORIGINAL_PATH_ROOT, RENDER_PATH_ROOT } = require('./pathConstants');
 const s3 = new S3();
 
 // Try to get an object from S3, and return either the valid response, or the error.
-async function tryGetObject(s3Key) {
+async function tryGetObject(userRequest, s3Key) {
   let response;
+  // If Range or partNumber were query string parameters, they need to be removed now.
+  // Also, video would have no other querystring parms since things like resizing, cropping,
+  // etc. do not apply.
+  const range = userRequest.headers?.Range || new URL(userRequest.url).searchParams.get('Range');
+  const partNumber = new URL(userRequest.url).searchParams.get('partNumber');
+  const key = range || partNumber ? s3Key.split('?')[0] : s3Key;
   try {
     response = await s3.getObject({
       Bucket: bucketName,
-      Key: s3Key,
+      Key: key,
+      Range: range ?? undefined,
+      PartNumber: partNumber ?? undefined,
     });
   } catch (error) {
+    // eslint-disable-next-line no-console
+    console.log('[error]:\n', JSON.stringify(error, null, 2));
     return error;
   }
   return response;
@@ -60,17 +69,12 @@ async function getOrCreateObject(userRequest, domain) {
     s3Key = `${RENDER_PATH_ROOT}/${domain}${pathWithoutExtension}*crop-${crop}.${sizeMatch[3]}`;
   }
 
-  // Remove double slashes from the s3 key, in the case of a missing domain.... this shouldn't be necessary there has to be a better way.
+  // Remove double slashes from the s3 key, in the case of a missing domain....
+  // this shouldn't be necessary there has to be a better way.
   s3Key = s3Key.replace(/\/\//g, '/');
 
   // Try to get the object from S3.
-  let response;
-  if(isRangeRequest(userRequest)) {
-    response = await tryGetObjectRange(userRequest, s3Key);
-  }
-  else {
-    response = await tryGetObject(s3Key);
-  }
+  const response = await tryGetObject(userRequest, s3Key);
 
   // if the image is not found, and there is a size match, then resize the image and save it to S3.
   if (response.Code === 'NoSuchKey' && sizeMatch) {
