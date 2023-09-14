@@ -22,6 +22,7 @@ exports.handler = async (event) => {
   const { userRequest, getObjectContext } = event;
   const { outputRoute, outputToken } = getObjectContext;
 
+  // eslint-disable-next-line no-console
   console.log('userRequest:\n', JSON.stringify(userRequest, null, 2));
 
   // Create the parameters for the WriteGetObjectResponse request.
@@ -86,11 +87,14 @@ exports.handler = async (event) => {
     // If the object is found, return its data with a 200 OK response.
     params.Body = response.Body;
     params.CacheControl = isPublic ? 'max-age=300' : 'max-age=0';
-    params.ContentType = response.ContentType ?? undefined;
-    params.ContentLength = response.ContentLength ?? undefined;
+    params.ContentType = response.ContentType;
+    params.ContentLength = response.ContentLength;
     params.ContentRange = response.ContentRange ?? undefined;
     params.AcceptRanges = response.AcceptRanges ?? undefined;
     params.Connection = response.Connection ?? undefined;
+    params.ETag = response.ETag ?? undefined;
+    params.LastModified = response.LastModified ?? undefined;
+    params.StatusCode = response?.$metadata?.httpStatusCode ?? undefined;
   }
 
   await s3.writeGetObjectResponse(params);
