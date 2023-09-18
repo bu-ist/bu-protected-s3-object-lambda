@@ -22,7 +22,6 @@ exports.handler = async (event) => {
   const { userRequest, getObjectContext } = event;
   const { outputRoute, outputToken } = getObjectContext;
 
-  // eslint-disable-next-line no-console
   console.log('userRequest:\n', JSON.stringify(userRequest, null, 2));
 
   // Create the parameters for the WriteGetObjectResponse request.
