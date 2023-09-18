@@ -82,7 +82,7 @@ async function getOrCreateObject(userRequest, domain) {
     const originalPath = decodedPathname.replace(/-(\d+)x(\d+)\.(jpg|jpeg|png|gif)$/, '.$3');
     const originalKey = `${ORIGINAL_PATH_ROOT}/${domain}${originalPath}`;
 
-    const originalResponse = await tryGetObject(originalKey);
+    const originalResponse = await tryGetObject(userRequest, originalKey);
     // If there's no original image, then return the 404 response.
     if (originalResponse.Code === 'NoSuchKey') {
       return response;
