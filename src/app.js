@@ -89,12 +89,12 @@ exports.handler = async (event) => {
     params.CacheControl = isPublic ? 'max-age=300' : 'max-age=0';
     params.ContentType = response.ContentType;
     params.ContentLength = response.ContentLength;
-    params.ContentRange = response.ContentRange ?? undefined;
-    params.AcceptRanges = response.AcceptRanges ?? undefined;
-    params.Connection = response.Connection ?? undefined;
-    params.ETag = response.ETag ?? undefined;
-    params.LastModified = response.LastModified ?? undefined;
-    params.StatusCode = response?.$metadata?.httpStatusCode ?? undefined;
+    params.ContentRange = response?.ContentRange;
+    params.AcceptRanges = response?.AcceptRanges;
+    params.Connection = response?.Connection;
+    params.ETag = response?.ETag;
+    params.LastModified = response?.LastModified;
+    params.StatusCode = response?.$metadata?.httpStatusCode;
   }
 
   await s3.writeGetObjectResponse(params);

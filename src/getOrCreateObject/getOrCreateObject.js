@@ -12,18 +12,11 @@ const s3 = new S3();
 // Try to get an object from S3, and return either the valid response, or the error.
 async function tryGetObject(userRequest, s3Key) {
   let response;
-  // If Range or partNumber were query string parameters, they need to be removed now.
-  // Also, video would have no other querystring parms since things like resizing, cropping,
-  // etc. do not apply.
-  const range = userRequest.headers?.Range || new URL(userRequest.url).searchParams.get('Range');
-  const partNumber = new URL(userRequest.url).searchParams.get('partNumber');
-  const key = range || partNumber ? s3Key.split('?')[0] : s3Key;
   try {
     response = await s3.getObject({
       Bucket: bucketName,
-      Key: key,
-      Range: range ?? undefined,
-      PartNumber: partNumber ?? undefined,
+      Key: s3Key,
+      Range: userRequest.headers?.Range,
     });
   } catch (error) {
     // eslint-disable-next-line no-console
