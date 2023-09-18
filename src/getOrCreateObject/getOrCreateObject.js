@@ -19,8 +19,6 @@ async function tryGetObject(userRequest, s3Key) {
       Range: userRequest.headers?.Range,
     });
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.log('[error]:\n', JSON.stringify(error, null, 2));
     return error;
   }
   return response;
