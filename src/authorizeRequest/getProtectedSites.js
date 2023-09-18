@@ -20,7 +20,7 @@ async function getProtectedSites() {
     Key: { SiteAndGroupKey: 'PROTECTED_SITES' },
   });
 
-  const { ProtectedSites } = Item || { ProtectedSites: '[]' };
+  const { ProtectedSites } = Item;
 
   return JSON.parse(ProtectedSites);
 }
