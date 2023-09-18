@@ -52,14 +52,17 @@ Resources:
     Properties: 
       Name: !Sub ${AWS::StackName}-olap
       ObjectLambdaConfiguration: 
-          SupportingAccessPoint: !Sub 'arn:aws:s3:${AWS::Region}:${AWS::AccountId}:accesspoint/${S3AccessPoint}'
-          TransformationConfigurations: 
-          - Actions: 
-              - GetObject
-            ContentTransformation: 
-              AwsLambda:
-                FunctionArn: !GetAtt ObjectLambdaFunction.Arn
-                FunctionPayload: 'test-payload'
+        AllowedFeatures:
+          - GetObject-Range
+          - GetObject-PartNumber
+        SupportingAccessPoint: !Sub 'arn:aws:s3:${AWS::Region}:${AWS::AccountId}:accesspoint/${S3AccessPoint}'
+        TransformationConfigurations: 
+        - Actions: 
+            - GetObject
+          ContentTransformation: 
+            AwsLambda:
+              FunctionArn: !GetAtt ObjectLambdaFunction.Arn
+              FunctionPayload: 'test-payload'
 
   # IAM principal user who has full access to the bucket, access points, and his own credentials.
   BucketUser:

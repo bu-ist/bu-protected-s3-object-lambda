@@ -10,12 +10,13 @@ const { ORIGINAL_PATH_ROOT, RENDER_PATH_ROOT } = require('./pathConstants');
 const s3 = new S3();
 
 // Try to get an object from S3, and return either the valid response, or the error.
-async function tryGetObject(s3Key) {
+async function tryGetObject(userRequest, s3Key) {
   let response;
   try {
     response = await s3.getObject({
       Bucket: bucketName,
       Key: s3Key,
+      Range: userRequest.headers?.Range,
     });
   } catch (error) {
     return error;
@@ -23,8 +24,9 @@ async function tryGetObject(s3Key) {
   return response;
 }
 
-async function getOrCreateObject(url, domain) {
+async function getOrCreateObject(userRequest, domain) {
   // Get the pathname from the URL.
+  const { url } = userRequest;
   const { pathname, searchParams } = new URL(url);
   // Get the size match from the pathname.
   const sizeMatch = pathname.match(/-(\d+)x(\d+)\.(jpg|jpeg|png|gif)$/);
@@ -58,11 +60,12 @@ async function getOrCreateObject(url, domain) {
     s3Key = `${RENDER_PATH_ROOT}/${domain}${pathWithoutExtension}*crop-${crop}.${sizeMatch[3]}`;
   }
 
-  // Remove double slashes from the s3 key, in the case of a missing domain.... this shouldn't be necessary there has to be a better way.
+  // Remove double slashes from the s3 key, in the case of a missing domain....
+  // this shouldn't be necessary there has to be a better way.
   s3Key = s3Key.replace(/\/\//g, '/');
 
   // Try to get the object from S3.
-  const response = await tryGetObject(s3Key);
+  const response = await tryGetObject(userRequest, s3Key);
 
   // if the image is not found, and there is a size match, then resize the image and save it to S3.
   if (response.Code === 'NoSuchKey' && sizeMatch) {
@@ -70,7 +73,7 @@ async function getOrCreateObject(url, domain) {
     const originalPath = decodedPathname.replace(/-(\d+)x(\d+)\.(jpg|jpeg|png|gif)$/, '.$3');
     const originalKey = `${ORIGINAL_PATH_ROOT}/${domain}${originalPath}`;
 
-    const originalResponse = await tryGetObject(originalKey);
+    const originalResponse = await tryGetObject(userRequest, originalKey);
     // If there's no original image, then return the 404 response.
     if (originalResponse.Code === 'NoSuchKey') {
       return response;

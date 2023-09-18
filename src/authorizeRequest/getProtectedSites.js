@@ -3,7 +3,6 @@ const { DynamoDB } = require('@aws-sdk/client-dynamodb');
 
 async function getProtectedSites() {
   // Load the protected sites from DynamoDB.
-  // Need to add error handling in case the ProtectedSites object is not found.
 
   // Instantiate a DynamoDB client.
   const dynamoDb = DynamoDBDocument.from(new DynamoDB({
