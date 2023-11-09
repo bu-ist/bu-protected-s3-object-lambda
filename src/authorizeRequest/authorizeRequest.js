@@ -36,8 +36,7 @@ async function authorizeRequest(userRequest, siteRule) {
   let isRootSite = indexOfRestricted ? indexOfRestricted < 5 : false;
 
   // If there is a whole-site protection rule, the group name will be the value of the rule.
-  // Unless there is also a groupName from the file path, then groupName takes precedence.
-  if (siteRule && !groupName) {
+  if (siteRule) {
     groupName = Object.values(siteRule)[0];
     // If there's nothing after the domain, then this is a root site.
     isRootSite = Object.keys(siteRule)[0] === domain;
