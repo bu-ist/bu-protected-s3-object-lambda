@@ -147,4 +147,21 @@ describe('authorizeRequest', () => {
     const result = await authorizeRequest(userRequest, siteRule);
     expect(result).toBe(false);
   });
+
+  it('should return true if the user is granted access by groupName even if denied by siteRule', async () => {
+    const userRequest = {
+      url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/2023/08/image.jpg',
+      headers: {
+        Eppn: 'user2@bu.edu', // This user should have access to 'somegroup' but not 'othergroup'.
+        'X-Real-Ip': '127.0.0.1',
+        'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
+      },
+    };
+    const siteRule = {
+      'example.host.bu.edu/somesite': 'othergroup',
+    };
+
+    const result = await authorizeRequest(userRequest, siteRule);
+    expect(result).toBe(true);
+  });
 });
