@@ -12,7 +12,7 @@ process.env.DYNAMODB_TABLE = 'test-table';
 
 // Mock the ddb client.
 ddbMock.on(GetCommand, {
-  Key: { SiteAndGroupKey: 'PROTECTED_SITES' },
+  Key: { PK: 'PROTECTED_SITES' },
 }).resolves({
   Item: {
     ProtectedSites: JSON.stringify([
@@ -22,7 +22,7 @@ ddbMock.on(GetCommand, {
     ]),
   },
 }).on(GetCommand, {
-  Key: { SiteAndGroupKey: 'example.host.bu.edu/protected#somegroup' },
+  Key: { PK: 'example.host.bu.edu/protected#somegroup' },
 }).resolves({
   Item: {
     rules: JSON.stringify({

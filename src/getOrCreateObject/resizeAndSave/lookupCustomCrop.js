@@ -28,7 +28,7 @@ async function lookupCustomCrop(url, domain, sizeMatch) {
   const params = {
     TableName: tableName,
     Key: {
-      SiteAndGroupKey: `SIZES#${domain}${siteName}`,
+      PK: `SIZES#${domain}${siteName}`,
     },
   };
 

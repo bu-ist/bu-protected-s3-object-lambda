@@ -10,7 +10,7 @@ process.env.DYNAMODB_TABLE = 'test-table';
 
 // Mock the ddb client.
 ddbMock.on(GetCommand, {
-  Key: { SiteAndGroupKey: 'example.host.bu.edu/somesite#somegroup' },
+  Key: { PK: 'example.host.bu.edu/somesite#somegroup' },
 }).resolves({
   Item: {
     rules: JSON.stringify({
@@ -22,7 +22,7 @@ ddbMock.on(GetCommand, {
     }),
   },
 }).on(GetCommand, {
-  Key: { SiteAndGroupKey: 'example.host.bu.edu/somesite#othergroup' },
+  Key: { PK: 'example.host.bu.edu/somesite#othergroup' },
 }).resolves({
   Item: {
     rules: JSON.stringify({
@@ -32,7 +32,7 @@ ddbMock.on(GetCommand, {
     }),
   },
 }).on(GetCommand, {
-  Key: { SiteAndGroupKey: 'example.host.bu.edu/#somegroup' },
+  Key: { PK: 'example.host.bu.edu/#somegroup' },
 }).resolves({
   Item: {
     rules: JSON.stringify({
