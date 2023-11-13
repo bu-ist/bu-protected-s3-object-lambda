@@ -17,7 +17,7 @@ async function getProtectedSites() {
 
   const { Item } = await dynamoDb.get({
     TableName: tableName,
-    Key: { SiteAndGroupKey: 'PROTECTED_SITES' },
+    Key: { PK: 'PROTECTED_SITES' },
   });
 
   const { ProtectedSites } = Item;

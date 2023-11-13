@@ -69,7 +69,7 @@ async function authorizeRequest(userRequest, siteRule) {
   // to avoid INFO Failed to find the group in DynamoDB for group:  entire-bu-community
   const { Item } = await dynamoDb.get({
     TableName: tableName,
-    Key: { SiteAndGroupKey: siteAndGroupKey },
+    Key: { PK: siteAndGroupKey },
   });
 
   if (Item == null) {
