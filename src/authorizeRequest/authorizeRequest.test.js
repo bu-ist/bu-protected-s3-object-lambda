@@ -14,7 +14,7 @@ ddbMock.on(GetCommand, {
 }).resolves({
   Item: {
     rules: JSON.stringify({
-      users: ['user1', 'user2', 'test', 'test2'],
+      users: ['user1', 'user2', 'test', 'test2', 'some_user'],
       states: ['faculty', 'staff'],
       entitlements: ['https://iam.bu.edu/reg/college/com'],
       ranges: ['crc'],
@@ -152,7 +152,7 @@ describe('authorizeRequest', () => {
     const userRequest = {
       url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/somegroup/image.jpg',
       headers: {
-        Eppn: 'user2@bu.edu', // This user should have access to 'somegroup' but not 'othergroup'.
+        Eppn: 'some_user@bu.edu', // This user should have access to 'somegroup' but not 'othergroup'.
         'X-Real-Ip': '127.0.0.1',
         'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
       },
