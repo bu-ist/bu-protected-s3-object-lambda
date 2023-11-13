@@ -161,14 +161,6 @@ Resources:
             Resource: '*'
   
   # DynamoDB table
-  AccessControlDynamoDB:
-    Type: AWS::Serverless::SimpleTable
-    Properties:
-      PrimaryKey:
-        Name: SiteAndGroupKey
-        Type: String
-      TableName: !Sub ${AWS::StackName}-AccessControl
-
   TempAccessControlDynamoDB:
     Type: AWS::Serverless::SimpleTable
     Properties:
