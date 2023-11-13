@@ -147,12 +147,12 @@ Resources:
       Timeout: 30
       Environment:
         Variables:
-          DYNAMODB_TABLE: !Ref AccessControlDynamoDB
+          DYNAMODB_TABLE: !Ref TempAccessControlDynamoDB
           ORIGINAL_BUCKET: !Ref S3Bucket
       # The function needs permission to call back to the S3 Object Lambda Access Point with the WriteGetObjectResponse.
       Policies:
         - DynamoDBReadPolicy:
-            TableName: !Ref AccessControlDynamoDB
+            TableName: !Ref TempAccessControlDynamoDB
         - S3CrudPolicy:
             BucketName: !Ref S3Bucket
         - Statement:
@@ -169,6 +169,13 @@ Resources:
         Type: String
       TableName: !Sub ${AWS::StackName}-AccessControl
 
+  TempAccessControlDynamoDB:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: PK
+        Type: String
+      TableName: !Sub ${AWS::StackName}-TempAccessControl
 
 Outputs:
   S3BucketName:
