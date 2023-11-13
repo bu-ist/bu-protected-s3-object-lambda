@@ -32,7 +32,8 @@ async function authorizeRequest(userRequest, siteRule) {
   const pathSegments = url.split('/');
 
   const indexOfRestricted = pathSegments.indexOf('__restricted');
-  let groupName = pathSegments[indexOfRestricted + 1];
+  // If there is no __restricted segment, set the group name to null.
+  let groupName = indexOfRestricted !== -1 ? pathSegments[indexOfRestricted + 1] : null;
   let isRootSite = indexOfRestricted ? indexOfRestricted < 5 : false;
 
   // If there is a whole-site protection rule, the group name will be the value of the rule.
