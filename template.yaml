@@ -96,7 +96,7 @@ Resources:
               Action: "*"
             # Allow user to write rules to the DynamoDB table.
             - Effect: Allow
-              Resource: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${TempAccessControlDynamoDB}
+              Resource: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${AccessControlDynamoDB}
               Action: 
                 - dynamodb:PutItem
                 - dynamodb:GetItem
@@ -147,12 +147,12 @@ Resources:
       Timeout: 30
       Environment:
         Variables:
-          DYNAMODB_TABLE: !Ref TempAccessControlDynamoDB
+          DYNAMODB_TABLE: !Ref AccessControlDynamoDB
           ORIGINAL_BUCKET: !Ref S3Bucket
       # The function needs permission to call back to the S3 Object Lambda Access Point with the WriteGetObjectResponse.
       Policies:
         - DynamoDBReadPolicy:
-            TableName: !Ref TempAccessControlDynamoDB
+            TableName: !Ref AccessControlDynamoDB
         - S3CrudPolicy:
             BucketName: !Ref S3Bucket
         - Statement:
@@ -161,6 +161,14 @@ Resources:
             Resource: '*'
   
   # DynamoDB table
+  AccessControlDynamoDB:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: PK
+        Type: String
+      TableName: !Sub ${AWS::StackName}-AccessControl
+
   TempAccessControlDynamoDB:
     Type: AWS::Serverless::SimpleTable
     Properties:
