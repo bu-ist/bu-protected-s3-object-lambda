@@ -169,14 +169,6 @@ Resources:
         Type: String
       TableName: !Sub ${AWS::StackName}-AccessControl
 
-  TempAccessControlDynamoDB:
-    Type: AWS::Serverless::SimpleTable
-    Properties:
-      PrimaryKey:
-        Name: PK
-        Type: String
-      TableName: !Sub ${AWS::StackName}-TempAccessControl
-
 Outputs:
   S3BucketName:
     Value: !Ref S3Bucket
