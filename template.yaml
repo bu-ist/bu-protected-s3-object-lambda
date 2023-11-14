@@ -96,7 +96,7 @@ Resources:
               Action: "*"
             # Allow user to write rules to the DynamoDB table.
             - Effect: Allow
-              Resource: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${AccessControlDynamoDB}
+              Resource: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${TempAccessControlDynamoDB}
               Action: 
                 - dynamodb:PutItem
                 - dynamodb:GetItem
