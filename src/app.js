@@ -1,10 +1,10 @@
 /* eslint-disable linebreak-style */
 // first example here: https://docs.aws.amazon.com/AmazonS3/latest/userguide/olap-writing-lambda.html
-const { S3 } = require('@aws-sdk/client-s3');
+import { S3 } from '@aws-sdk/client-s3';
 
-const { authorizeRequest } = require('./authorizeRequest/authorizeRequest');
-const { getOrCreateObject } = require('./getOrCreateObject/getOrCreateObject');
-const { getProtectedSites } = require('./authorizeRequest/getProtectedSites');
+import { authorizeRequest } from './authorizeRequest/authorizeRequest.js';
+import { getOrCreateObject } from './getOrCreateObject/getOrCreateObject.js';
+import { getProtectedSites } from './authorizeRequest/getProtectedSites.js';
 
 const s3 = new S3();
 
@@ -13,7 +13,7 @@ const s3 = new S3();
 const cachedProtectedSites = {};
 const cacheInterval = 60000; // one minute in milliseconds
 
-exports.handler = async (event) => {
+export async function handler(event) {
   // Output the event details to CloudWatch Logs.
   // console.log("Event:\n", JSON.stringify(event, null, 2));
 

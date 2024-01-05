@@ -1,11 +1,10 @@
 /* eslint-disable import/no-unresolved */
-const { S3 } = require('@aws-sdk/client-s3');
-const { lookupCustomCrop } = require('./resizeAndSave/lookupCustomCrop');
-const { resizeAndSave } = require('./resizeAndSave');
+import { S3 } from '@aws-sdk/client-s3';
+import { lookupCustomCrop } from './resizeAndSave/lookupCustomCrop';
+import { resizeAndSave } from './resizeAndSave';
+import { ORIGINAL_PATH_ROOT, RENDER_PATH_ROOT } from './pathConstants';
 
 const bucketName = process.env.ORIGINAL_BUCKET;
-
-const { ORIGINAL_PATH_ROOT, RENDER_PATH_ROOT } = require('./pathConstants');
 
 const s3 = new S3();
 
@@ -91,4 +90,4 @@ async function getOrCreateObject(userRequest, domain) {
   return response;
 }
 
-module.exports = { getOrCreateObject };
+export { getOrCreateObject };

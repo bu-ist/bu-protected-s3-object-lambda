@@ -1,8 +1,8 @@
-const { DynamoDBDocument } = require('@aws-sdk/lib-dynamodb');
-const { DynamoDB } = require('@aws-sdk/client-dynamodb');
+import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
+import { DynamoDB } from '@aws-sdk/client-dynamodb';
 
-const { checkUserAccess } = require('./checkUserAccess');
-const { checkNetworkAccess } = require('./checkNetworkAccess/checkNetworkAccess');
+import { checkUserAccess } from './checkUserAccess';
+import { checkNetworkAccess } from './checkNetworkAccess/checkNetworkAccess';
 
 async function authorizeRequest(userRequest, siteRule) {
   // Check if the user is authorized to access the object.
@@ -95,4 +95,4 @@ async function authorizeRequest(userRequest, siteRule) {
   return allowed;
 }
 
-module.exports = { authorizeRequest };
+export { authorizeRequest };

@@ -13,4 +13,4 @@ function long2ip(longValue) {
   return multipliers.map((multiplier) => Math.floor((longValue % (multiplier * 0x100)) / multiplier)).join('.');
 }
 
-module.exports = { ip2long, long2ip };
+export { ip2long, long2ip };
