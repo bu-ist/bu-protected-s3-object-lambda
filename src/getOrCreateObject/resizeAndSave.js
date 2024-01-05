@@ -1,7 +1,7 @@
 import { S3 } from '@aws-sdk/client-s3';
 import { createCommonJS } from 'mlly'; // Only needed for ESM compatibility for sharp.
-import { ORIGINAL_PATH_ROOT, RENDER_PATH_ROOT } from './pathConstants';
-import { streamToString } from './resizeAndSave/streamToString';
+import { ORIGINAL_PATH_ROOT, RENDER_PATH_ROOT } from './pathConstants.js';
+import { streamToString } from './resizeAndSave/streamToString.js';
 
 // Create a CommonJS environment for the sharp module, which is not yet ESM compatible.
 // eslint-disable-next-line no-unused-vars

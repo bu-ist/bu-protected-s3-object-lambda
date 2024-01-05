@@ -1,8 +1,8 @@
 /* eslint-disable import/no-unresolved */
 import { S3 } from '@aws-sdk/client-s3';
-import { lookupCustomCrop } from './resizeAndSave/lookupCustomCrop';
-import { resizeAndSave } from './resizeAndSave';
-import { ORIGINAL_PATH_ROOT, RENDER_PATH_ROOT } from './pathConstants';
+import { lookupCustomCrop } from './resizeAndSave/lookupCustomCrop.js';
+import { resizeAndSave } from './resizeAndSave.js';
+import { ORIGINAL_PATH_ROOT, RENDER_PATH_ROOT } from './pathConstants.js';
 
 const bucketName = process.env.ORIGINAL_BUCKET;
 

@@ -1,8 +1,8 @@
 import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
 import { DynamoDB } from '@aws-sdk/client-dynamodb';
 
-import { checkUserAccess } from './checkUserAccess';
-import { checkNetworkAccess } from './checkNetworkAccess/checkNetworkAccess';
+import { checkUserAccess } from './checkUserAccess.js';
+import { checkNetworkAccess } from './checkNetworkAccess/checkNetworkAccess.js';
 
 async function authorizeRequest(userRequest, siteRule) {
   // Check if the user is authorized to access the object.

@@ -1,5 +1,5 @@
-import { ip2long } from './ip2long';
-import { rangeSets } from './ranges';
+import { ip2long } from './ip2long.js';
+import { rangeSets } from './ranges.js';
 
 function checkNetworkAccess(rules, headers) {
   // Get the user ip address from the headers, with a default value of an empty string.
