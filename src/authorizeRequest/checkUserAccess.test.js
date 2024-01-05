@@ -1,4 +1,5 @@
-const { checkUserAccess } = require('./checkUserAccess');
+import { describe, it, expect } from 'vitest';
+import { checkUserAccess } from './checkUserAccess';
 
 // Setup an example rules object.
 const exampleUserRules = {

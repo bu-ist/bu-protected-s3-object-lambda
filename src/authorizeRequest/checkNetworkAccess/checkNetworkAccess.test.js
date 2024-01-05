@@ -1,4 +1,5 @@
-const { checkNetworkAccess } = require('./checkNetworkAccess');
+import { describe, it, expect } from 'vitest';
+import { checkNetworkAccess } from './checkNetworkAccess';
 
 describe('checkNetworkAccess', () => {
   it('should return true if the user network IP address is in the allowed ranges from the crc vpn segment', () => {
