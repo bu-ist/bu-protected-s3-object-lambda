@@ -1,9 +1,11 @@
-const { mockClient } = require('aws-sdk-client-mock');
-const { DynamoDBDocumentClient, GetCommand } = require('@aws-sdk/lib-dynamodb');
+import { describe, it, expect } from 'vitest';
+import { mockClient } from 'aws-sdk-client-mock';
+import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
 
 const ddbMock = mockClient(DynamoDBDocumentClient);
 
-const { authorizeRequest } = require('./authorizeRequest');
+// eslint-disable-next-line import/first
+import { authorizeRequest } from './authorizeRequest';
 
 // Table name is not relevant for these tests, but has to exist for the mocked ddb client.
 process.env.DYNAMODB_TABLE = 'test-table';

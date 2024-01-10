@@ -1,11 +1,15 @@
-const { S3 } = require('@aws-sdk/client-s3');
-const sharp = require('sharp'); // Used for image resizing
+import { S3 } from '@aws-sdk/client-s3';
+import { createCommonJS } from 'mlly'; // Only needed for ESM compatibility for sharp.
+import { ORIGINAL_PATH_ROOT, RENDER_PATH_ROOT } from './pathConstants.js';
+import { streamToString } from './resizeAndSave/streamToString.js';
 
-const { streamToString } = require('./resizeAndSave/streamToString');
+// Create a CommonJS environment for the sharp module, which is not yet ESM compatible.
+// eslint-disable-next-line no-unused-vars
+const { __dirname, __filename, require } = createCommonJS(import.meta.url);
+// eslint-disable-next-line import/first, import/order
+import sharp from 'sharp'; // Used for image resizing
 
 const bucketName = process.env.ORIGINAL_BUCKET;
-
-const { ORIGINAL_PATH_ROOT, RENDER_PATH_ROOT } = require('./pathConstants');
 
 const s3 = new S3();
 
@@ -67,4 +71,4 @@ async function resizeAndSave(data, originalPath, sizeMatch, crop) {
   return resized;
 }
 
-module.exports = { getOriginalS3Key, resizeAndSave };
+export { getOriginalS3Key, resizeAndSave };

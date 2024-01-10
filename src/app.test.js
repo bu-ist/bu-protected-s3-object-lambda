@@ -1,10 +1,10 @@
-const { mockClient } = require('aws-sdk-client-mock');
-const { GetObjectCommand, S3Client } = require('@aws-sdk/client-s3');
+import { describe, it, expect } from 'vitest';
+import { mockClient } from 'aws-sdk-client-mock';
+import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
 
-const { DynamoDBDocumentClient, GetCommand } = require('@aws-sdk/lib-dynamodb');
-
-// Require the function to test.
-const { handler } = require('./app');
+// Import the function to test.
+import { handler } from './app';
 
 const ddbMock = mockClient(DynamoDBDocumentClient);
 

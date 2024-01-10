@@ -1,5 +1,5 @@
-const { ip2long } = require('./ip2long');
-const rangeSets = require('./ranges.json');
+import { ip2long } from './ip2long.js';
+import { rangeSets } from './ranges.js';
 
 function checkNetworkAccess(rules, headers) {
   // Get the user ip address from the headers, with a default value of an empty string.
@@ -32,4 +32,4 @@ function checkNetworkAccess(rules, headers) {
   return isAllowed;
 }
 
-module.exports = { checkNetworkAccess };
+export { checkNetworkAccess };

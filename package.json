@@ -2,9 +2,9 @@
   "name": "bu-protected-s3-object-lambda",
   "version": "0.0.1",
   "description": "Delivers asset from S3 through an object lambda with access restrictions and image resizing",
+  "type": "module",
   "scripts": {
-    "test": "jest",
-    "test-watch": "jest --watch"
+    "test": "vitest"
   },
   "repository": {
     "type": "git",
@@ -26,9 +26,7 @@
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-n": "^15.6.1",
     "eslint-plugin-promise": "^6.1.1",
-    "jest": "^29.4.3"
-  },
-  "jest": {
-    "rootDir": "./src"
+    "sharp": "^0.33.1",
+    "vitest": "^1.1.1"
   }
 }

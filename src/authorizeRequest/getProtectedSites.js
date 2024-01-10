@@ -1,5 +1,5 @@
-const { DynamoDBDocument } = require('@aws-sdk/lib-dynamodb');
-const { DynamoDB } = require('@aws-sdk/client-dynamodb');
+import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
+import { DynamoDB } from '@aws-sdk/client-dynamodb';
 
 async function getProtectedSites() {
   // Load the protected sites from DynamoDB.
@@ -25,4 +25,4 @@ async function getProtectedSites() {
   return JSON.parse(ProtectedSites);
 }
 
-module.exports = { getProtectedSites };
+export { getProtectedSites };

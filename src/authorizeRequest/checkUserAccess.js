@@ -29,4 +29,4 @@ function checkUserAccess(rules, headers) {
   return userAllowed || affiliationAllowed || entitlementsAllowed;
 }
 
-module.exports = { checkUserAccess };
+export { checkUserAccess };

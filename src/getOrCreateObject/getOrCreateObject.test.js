@@ -1,11 +1,11 @@
 /* eslint-disable import/no-extraneous-dependencies */
-const { mockClient } = require('aws-sdk-client-mock');
-const { GetObjectCommand, S3Client } = require('@aws-sdk/client-s3');
+import { describe, it, expect } from 'vitest';
+import { mockClient } from 'aws-sdk-client-mock';
+import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
 
-const { DynamoDBDocumentClient, GetCommand } = require('@aws-sdk/lib-dynamodb');
-
-// Require the function to test.
-const { getOrCreateObject } = require('./getOrCreateObject');
+// Import the function to test.
+import { getOrCreateObject } from './getOrCreateObject';
 
 process.env.DYNAMODB_TABLE = 'test-table';
 

@@ -10,4 +10,4 @@ function streamToString(stream) {
   });
 }
 
-module.exports = { streamToString };
+export { streamToString };
