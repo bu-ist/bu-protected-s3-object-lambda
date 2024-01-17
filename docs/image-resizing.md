@@ -4,7 +4,7 @@ Where WordPress normally generates all scaled derivates during file upload, this
 
 It also allows for original media to be stored separately from the scaled derivates, making it easier to manage very large media libraries. For example, when cloning sites for development or testing, the original media can be copied to the new site without having to copy all of the scaled versions. The scaled versions will be automatically generated when the media is requested.
 
-Custom crop controls are available with the image scaling, either through GET parameters to the image request or through custom image sizes defined in a WordPress theme. More detail is available in the [Custom Crop](./docs/custom-crop.md) documentation.
+Custom crop controls are available with the image scaling, either through GET parameters to the image request or through custom image sizes defined in a WordPress theme.
 
 The access controls are applied based on the path of the file, not the file name, so access controls are applied consistently across the original and any scaled versions of the file.
 
