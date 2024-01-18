@@ -29,7 +29,7 @@ In addition to crop parameters defined in WordPress themes, custom crop paramete
 https://example.bu.edu/example-site/files/2024/01/16/picture-800x300.jpg?resize-position=top
 ```
 
-Currently only top, bottom, left, right are accepted as resize-position options
+Currently only top, bottom, left, right are accepted as resize-position options, but in theory any of the [sharp library resize position options](https://sharp.pixelplumbing.com/api-resize) could be added.
 
 ## References
 
