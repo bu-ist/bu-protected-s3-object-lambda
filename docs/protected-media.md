@@ -46,7 +46,7 @@ Each record has an attribute called `rules` which is a JSON encoded array of acc
     "users":["webteam","authorized-user"],
     "states":["faculty"],
     "entitlements":["http:\/\/iam.bu.edu\/hr\/OrgUnitParent\/9999999"],
-    "ranges":[],
+    "ranges":["crc","bmc"],
     "satisfy_all":null,
     "admins":["site-admin1","site-admin2"],
 }
