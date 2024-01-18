@@ -1,6 +1,8 @@
 # BU Protected S3 Object Lambda
 
-This AWS Lambda application is designed to dynamically serve public and protected media files from an S3 bucket. It uses an S3 Object Lambda Access Point to apply access control protections and deliver objects from the bucket based on user session data and network location. It also provides WordPress compatible image resizing on demand using the [sharp](https://www.npmjs.com/package/sharp) library.
+This AWS Lambda application, developed using the [Serverless Application Model (SAM)](https://aws.amazon.com/serverless/sam/), is designed to dynamically serve public and protected media files from an S3 bucket. It uses an S3 Object Lambda Access Point to apply access control protections and deliver objects from the bucket based on user session data and network location. It also provides WordPress compatible image resizing on demand using the [sharp](https://www.npmjs.com/package/sharp) library.
+
+At Boston University, it is integrated with WordPress to provide media library services for the [BU WordPress Service](https://www.bu.edu/tech/services/cccs/websites/www/wordpress/).
 
 ## Protected media
 
