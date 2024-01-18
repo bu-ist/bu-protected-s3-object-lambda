@@ -1,6 +1,6 @@
 # Protected media
 
-The Lambda applies access restrictions based on rules determined by records in DynamoDB and by the url of the request. These urls and DynamDB records are managed by the BU Access Control WordPress plugin.
+The Lambda function applies access restrictions based on rules determined by records in DynamoDB and by the url of the request. These urls and DynamoDB records are managed by the BU Access Control WordPress plugin.
 
 There are two ways to protect media files in this application: individual file protections and whole site protections.
 
@@ -33,6 +33,8 @@ This is an example of a `PROTECTED_SITES` record:
 
 To efficiently apply the access controls for these protected sites, the `PROTCETED_SITES` record is cached by the Lambda function for up to a minute. This means that any changes to the `PROTECTED_SITES` record will not be applied until the cache expires. The Lambda uses a value declared outside of the handler function to store the cache, and the cache is refreshed when the value is empty or expired. This is a standard part of the Lambda execution environment, there is a [good summary blog post about it here](https://katiyarvipinknp.medium.com/how-to-cache-the-data-in-aws-lambda-function-using-node-js-use-tmp-storage-of-aws-lambda-2c7e1e01d923).
 
+On each request, the Lambda function checks if the site url is in the `PROTECTED_SITES` list. If so, it gets the access group name from the list and uses it to apply the access rules the same as with individual file protections.
+
 ## Access control rules
 
 The access control rules are stored in a DynamoDB table, which is created by the CloudFormation template and populated by the BU Access Control WordPress plugin. The access rule records in the table have a composite primary key of `site` and `group`, where the `site` attribute is the url of the site and the `group` attribute is the name of the access group. The two parts of the primary key are combined with a `#` character as a delimiter. For example, the access rule record for the `example-group` access group on the `https://sites.bu.edu/example-site` site would have a primary key of `sites.bu.edu/example-site#example-group`.
@@ -46,7 +48,7 @@ Each record has an attribute called `rules` which is a JSON encoded array of acc
     "entitlements":["http:\/\/iam.bu.edu\/hr\/OrgUnitParent\/9999999"],
     "ranges":[],
     "satisfy_all":null,
-    "admins":["site-","wrh"]
+    "admins":["site-admin1","site-admin2"],
 }
 ```
 
