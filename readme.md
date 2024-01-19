@@ -57,6 +57,8 @@ wp access network-update-dynamodb
 
 The parameters of the BU production deployment are in the `samconfig.toml` file under the "prod" stanza.
 
+Deployments are handled automatically by a Github Action that runs a `sam build` and `sam deploy` with the `prod` configuration when a commit is made to the `main` branch. More details about the Github Action are available in the [Continuous integration/deployment (CI/CD)](./docs/cicd.md) documentation.
+
 ## Testing
 
 The package includes a suite of unit tests that can be run using the following command:
