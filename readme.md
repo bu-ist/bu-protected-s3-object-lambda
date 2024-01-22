@@ -1,90 +1,79 @@
-# Amazon S3 with S3 Object Lambda - Returns image thumbnail from S3
+# BU Protected S3 Object Lambda
 
-The SAM template deploys a Lambda function, an S3 bucket, an S3 Access Point, and an S3 Object Lambda Access Point. This application uses S3 Object Lambda to return a thumbnail version of an image in S3.
+This AWS Lambda application, developed using the [Serverless Application Model (SAM)](https://aws.amazon.com/serverless/sam/), is designed to dynamically serve public and protected media files from an S3 bucket. It uses an S3 Object Lambda Access Point to apply access control protections and deliver objects from the bucket based on user session data and network location. It also provides WordPress compatible image resizing on demand using the [sharp](https://www.npmjs.com/package/sharp) library.
 
-Learn more about this pattern at Serverless Land Patterns: [https://serverlessland.com/patterns/s3-object-lambda](https://serverlessland.com/patterns/s3-object-lambda)
+At Boston University, it is integrated with WordPress to provide media library services for the [BU WordPress Service](https://www.bu.edu/tech/services/cccs/websites/www/wordpress/).
 
-Important: this application uses various AWS services and there are costs associated with these services after the Free Tier usage - please see the [AWS Pricing page](https://aws.amazon.com/pricing/) for details. You are responsible for any AWS costs incurred. No warranty is implied in this example.
+## Protected media
 
-## Requirements
+This AWS Lambda application provides robust protection for media files stored in an S3 bucket. It uses an S3 Object Lambda Access Point to control access to the media files based on user session data and network location. This ensures that only authorized users can access protected media files according to their login session. The access control rules are defined in a DynamoDB table, allowing for flexible and dynamic access control configurations. This feature is particularly useful for applications that need to serve sensitive media files, such as private documents, images, or videos, to authenticated users. Using this application, public and private media can be safely stored and served from the same S3 bucket.
 
-* [Create an AWS account](https://portal.aws.amazon.com/gp/aws/developer/registration/index.html) if you do not already have one and log in. The IAM user that you use must have sufficient permissions to make necessary AWS service calls and manage AWS resources.
-* [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html) installed and configured
-* [Git Installed](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
-* [AWS Serverless Application Model](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html) (AWS SAM) installed
+The Lambda function relies on custom headers in the incoming request event to determine the user session data and network location.
 
-## Deployment Instructions
+More detail about access controls is availeble in the [Protected Media](./docs/protected-media.md) documentation.
 
-1. Create a new directory, navigate to that directory in a terminal and clone the GitHub repository:
-    ``` 
-    git clone https://github.com/aws-samples/serverless-patterns
-    ```
-1. Change directory to the pattern directory:
-    ```
-    cd s3-object-lambda
-    ```
-1. From the command line, use AWS SAM to build and deploy the AWS resources for the pattern as specified in the template.yml file:
-    ```
-    sam build
-    sam deploy --guided
-    ```
-1. During the prompts:
-    * Enter a stack name
-    * Enter the desired AWS Region
-    * Allow SAM CLI to create IAM roles with the required permissions.
+### Use as WordPress media library
 
-    Once you have run `sam deploy --guided` mode once and saved arguments to a configuration file (samconfig.toml), you can use `sam deploy` in future to use these defaults.
+At Boston University, this application is used to serve media files from the WordPress media library in concert with a custom WordPress plugin which supplies the access rules to the DynamoDB table.  Login session data is provided by a Shibboleth session connected to the WordPress implementation. There is a routing rule that proxies all requests for media files to the S3 Object Lambda Access Point. The custom login headers are added by mod_shib based on any Shibboleth login session associated with the request.
 
-1. Note the outputs from the SAM deployment process. These contain the resource names and/or ARNs which are used for testing.
+The S3 Object Lambda an effective way to apply access protections but has the limition of only being accessible through a valid AWS v4 signed request. In order to provide a public interface, the proxied media requests are first sent to an instance of an [S3 sig-v4 proxy container]( https://github.com/awslabs/aws-sigv4-proxy).
 
-## How it works
+The Lambda also accomodates multi-site and multi-network WordPress installations by using the X-Forwarded-Host header to determine the path of the S3 object that is requested by the user. More detail is available in the [Using the X-Forwarded-Host Header](./docs/x-forwarded-host-header.md) documentation.
 
-When a request is made to the S3 Object Lambda Access Point, the Lambda function is invoked. Within the Lambda function code, the getObjectContext property contains the following useful information:
+This diagram describes the flow of a request for a protected media file:
 
-1. inputS3Url: a [presigned URL](https://docs.aws.amazon.com/AmazonS3/latest/userguide/ShareObjectPreSignedURL.html) that the function can use to download the original object from the supporting Access Point. In this way, the Lambda function does not need to have S3 read permissions to retrieve the original object and can only access the object processed by each invocation.
-1. outputRoute, outputToken: used to send back the modified object using the [WriteGetObjectResponse](https://docs.aws.amazon.com/AmazonS3/latest/API/API_WriteGetObjectResponse.html) API.
+![Protected media flow diagram](./docs/images/request-flow-diagram.png)
 
-The function uses the provided presigned URL to retrieve the requested image from S3 using [axios](https://www.npmjs.com/package/axios). The function resizes the image using [sharp](https://www.npmjs.com/package/sharp). Then the function returns a thumbnail version of the image back to S3 Object Lambda.
+## Image resizing
+
+The Lambda function also provides image resizing on demand using the [sharp](https://www.npmjs.com/package/sharp) library. This feature is designed to integrate with the generated media sizes in the WordPress media library. When a user requests a media file with a specific size, the Lambda function checks if the file exists in the bucket. If it doesn't exist, the Lambda function creates the sized version of the file and stores it in the bucket. This feature is particularly useful for applications that need to serve images at specific sizes, such as a responsive web application. Using this application, images can be stored in the media library at their original size and sized versions can be created on demand and stored separately.
+
+More detail about image resizing is available in the [Image Resizing](./docs/image-resizing.md) documentation.
+
+## Lambda function description
+
+More detail about the Lambda function is available in the [Lambda Function Description](./docs/lambda-function-description.md) documentation.
+
+## Deployment
+
+The application is defined as a [AWS Serverless Application Model (SAM)](https://aws.amazon.com/serverless/sam/) template and can be generally deployed with the standard SAM CLI deploy sequence:
+
+```bash
+sam build -u
+sam deploy --guided
+```
+
+The SAM template outputs several details of the deployment, including the name of the S3 bucket and the name of the S3 Object Lambda Access Point. It also contains a reference to the secret in AWS Secrets Manager that contains an access key that can be used with the S3 sig-v4 proxy container. This access key can also be used with the [Human Made S3 Uploads plugin](https://github.com/humanmade/S3-Uploads) to provide WordPress with upload access to the bucket.
+
+### WordPress integration
+
+Once the DynamoDB exists, the credential from the AWS Secrets Manager secret can be added to the WordPress configuration. Once the credential is added, the BU Access Control plugin has a wp-cli command that can be used to push the access rules to the DynamoDB table. The command is:
+
+```bash
+wp access network-update-dynamodb
+```
+
+### BU production deployment
+
+The parameters of the BU production deployment are in the `samconfig.toml` file under the "prod" stanza.
+
+Deployments are handled automatically by a Github Action that runs a `sam build` and `sam deploy` with the `prod` configuration when a commit is made to the `main` branch. More details about the Github Action are available in the [Continuous integration/deployment (CI/CD)](./docs/cicd.md) documentation.
 
 ## Testing
 
-Run the following S3 CLI command to upload two example images to the S3 bucket (example1.jpg, example2.jpg). Note, you must edit the {S3BucketName} placeholder with the name of the S3 Bucket. This is provided in the stack outputs.
+The package includes a suite of unit tests that can be run using the following command:
 
 ```bash
-aws s3 cp './images/' s3://{S3BucketName} --recursive
+npm test
 ```
 
-Run the following S3 CLI commands to download a thumbnail version of an example image. Note, you must edit the {S3ObjectLambdaAccessPoint} placeholder with the ARN of the S3 Object Lambda Access Point (eg: arn:aws:s3-object-lambda:us-east-2:111111111111:accesspoint/resize-olap). This is provided in the stack outputs.
+The tests use the [vitest](https://vitest.dev/) framework and the [aws-sdk-mock](https://www.npmjs.com/package/aws-sdk-mock) library to mock the AWS SDK. Each .js file has a corresponding .test.js file that contains the unit tests for that module. The tests contain mock values for various services and can be used to step debug through an example request during development.
 
-```bash
-aws s3api get-object --bucket '{S3ObjectLambdaAccessPoint}' --key example1.jpg './images/example1-thumbnail.jpg'
-```
+## Troubleshooting
 
-```bash
-aws s3api get-object --bucket '{S3ObjectLambdaAccessPoint}' --key example2.jpg './images/example2-thumbnail.jpg'
-```
+On first deployment, the PROTECTED_SITES record in the DynamoDB table will not yet exist. This will cause the Lambda function to return a 403 Forbidden response for all requests. The PROTECTED_SITES record can be empty, but it must exist in order for the Lambda function to work correctly.
 
-NOTE: Upgrade to the latest AWS CLI version if you receive the following error when using the get-object command: `Parameter validation failed: Invalid bucket name: Bucket name must match the regex`
-
-## Documentation
+## References
 
 * [Introducing Amazon S3 Object Lambda – Use Your Code to Process Data as It Is Being Retrieved from S3](https://aws.amazon.com/blogs/aws/introducing-amazon-s3-object-lambda-use-your-code-to-process-data-as-it-is-being-retrieved-from-s3/)
-* [Transforming objects with S3 Object Lambda](https://docs.aws.amazon.com/AmazonS3/latest/userguide/transforming-objects.html)
-* [S3 Object Lambda pricing](https://aws.amazon.com/s3/pricing/)
-* [CI/CD](./docs/cicd.md)
-
-## Cleanup
-
-1. From the AWS Management Console, empty the S3 bucket that contains the example images.
-1. Delete the stack
-    ```bash
-    aws cloudformation delete-stack --stack-name STACK_NAME
-    ```
-1. Confirm the stack has been deleted
-    ```bash
-    aws cloudformation list-stacks --query "StackSummaries[?contains(StackName,'STACK_NAME')].StackStatus"
-    ```
-----
-Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-
-SPDX-License-Identifier: MIT-0
+* [Amazon S3 Object Lambda Developer Guide](https://docs.aws.amazon.com/AmazonS3/latest/userguide/transforming-objects.html)

@@ -3,9 +3,9 @@
 Since [Github Actions](https://docs.github.com/actions) runs our CI/CD pipeline, a recommended refresher on CI/CD is the github ["CI/CD explained" article](https://resources.github.com/ci-cd/).
 The implementation of this pipeline is a one-time exercise, with this as a record detailing what was done.
 
-### Overview
+## Overview
 
-A rudimentary [workflow](https://docs.github.com/en/actions/using-workflows/about-workflows#about-workflows) has been setup for deployment of the app that breaks down into the following sequence:
+A [workflow](https://docs.github.com/en/actions/using-workflows/about-workflows#about-workflows) has been setup for deployment of the app that breaks down into the following sequence:
 
 1. A feature branch is approved and merged into the main branch of the github repository for the app.
    This kicks off the [workflow](https://docs.github.com/en/actions/using-workflows/about-workflows#about-workflows).
@@ -31,7 +31,7 @@ The abridged steps are:
    The role "WordpressProtectedAssetsGithubActionsCloudformingRole" can be found [here](https://us-east-1.console.aws.amazon.com/iamv2/home?region=us-east-1#/roles/details/WordpressProtectedAssetsGithubActionsCloudformingRole?section=permissions)
    Role policy:
 
-   ```
+   ```json
    {
        "Version": "2012-10-17",
        "Statement": [
@@ -60,7 +60,7 @@ The abridged steps are:
 
    Trust relationship:
 
-   ```
+   ```json
    {
        "Version": "2012-10-17",
        "Statement": [
@@ -87,7 +87,7 @@ The abridged steps are:
 3. Create the github action (located in `.github/workflows/cicd.yml`)
    Below are relevant excerpts that shows the deploy job step that uses the role (`role-session-name`)
 
-   ```
+   ```yaml
      env:
        AWS_REGION: us-east-1
      
@@ -98,9 +98,9 @@ The abridged steps are:
      ...
      
      jobs:
-   	...
-   	 deploy:
-   	 ...
+    ...
+    deploy:
+    ...
            - uses: aws-actions/configure-aws-credentials@v2
              with: 
                role-to-assume: arn:aws:iam::115619461932:role/WordpressProtectedAssetsGithubActionsCloudformingRole
