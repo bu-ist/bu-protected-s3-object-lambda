@@ -4,13 +4,33 @@ This AWS Lambda application, developed using the [Serverless Application Model (
 
 At Boston University, it is integrated with WordPress to provide media library services for the [BU WordPress Service](https://www.bu.edu/tech/services/cccs/websites/www/wordpress/).
 
+## Contents
+
+- [Protected media](#protected-media)
+- [Image resizing](#image-resizing)
+- [S3 Object Lambda function](#s3-object-lambda-function)
+- [Deployment](#deployment)
+- [BU production deployment](#bu-production-deployment)
+- [Testing](#testing)
+- [Troubleshooting](#troubleshooting)
+- [References](#references)
+
+## Additional Documentation
+
+There are additional documents that describe the application in more detail available in the [docs](./docs) directory:
+
+- [Protected media details](./docs/protected-media.md)
+- [X-Forwarded-Host Header details](./docs/x-forwarded-host-header.md)
+- [Image resizing details](./docs/image-resizing.md)
+- [Lambda function details](./docs/lambda-function-description.md)
+
 ## Protected media
 
 This AWS Lambda application provides robust protection for media files stored in an S3 bucket. It uses an S3 Object Lambda Access Point to control access to the media files based on user session data and network location. This ensures that only authorized users can access protected media files according to their login session. The access control rules are defined in a DynamoDB table, allowing for flexible and dynamic access control configurations. This feature is particularly useful for applications that need to serve sensitive media files, such as private documents, images, or videos, to authenticated users. Using this application, public and private media can be safely stored and served from the same S3 bucket.
 
 The Lambda function relies on custom headers in the incoming request event to determine the user session data and network location.
 
-More detail about access controls is availeble in the [Protected Media](./docs/protected-media.md) documentation.
+More detail about access controls is availeble in the **[Protected Media](./docs/protected-media.md)** documentation.
 
 ### Use as WordPress media library
 
@@ -18,7 +38,7 @@ At Boston University, this application is used to serve media files from the Wor
 
 The S3 Object Lambda an effective way to apply access protections but has the limition of only being accessible through a valid AWS v4 signed request. In order to provide a public interface, the proxied media requests are first sent to an instance of an [S3 sig-v4 proxy container]( https://github.com/awslabs/aws-sigv4-proxy).
 
-The Lambda also accomodates multi-site and multi-network WordPress installations by using the X-Forwarded-Host header to determine the path of the S3 object that is requested by the user. More detail is available in the [Using the X-Forwarded-Host Header](./docs/x-forwarded-host-header.md) documentation.
+The Lambda also accomodates multi-site and multi-network WordPress installations by using the X-Forwarded-Host header to determine the path of the S3 object that is requested by the user. More detail is available in the **[Using the X-Forwarded-Host Header](./docs/x-forwarded-host-header.md)** documentation.
 
 This diagram describes the flow of a request for a protected media file:
 
@@ -28,11 +48,15 @@ This diagram describes the flow of a request for a protected media file:
 
 The Lambda function also provides image resizing on demand using the [sharp](https://www.npmjs.com/package/sharp) library. This feature is designed to integrate with the generated media sizes in the WordPress media library. When a user requests a media file with a specific size, the Lambda function checks if the file exists in the bucket. If it doesn't exist, the Lambda function creates the sized version of the file and stores it in the bucket. This feature is particularly useful for applications that need to serve images at specific sizes, such as a responsive web application. Using this application, images can be stored in the media library at their original size and sized versions can be created on demand and stored separately.
 
-More detail about image resizing is available in the [Image Resizing](./docs/image-resizing.md) documentation.
+More detail about image resizing is available in the **[Image Resizing documentation](./docs/image-resizing.md)**.
 
-## Lambda function description
+## S3 Object Lambda function
 
-More detail about the Lambda function is available in the [Lambda Function Description](./docs/lambda-function-description.md) documentation.
+The SAM template defines an `ObjectLambdaFunction` which leverages the [AWS S3 Object Lambda feature](https://aws.amazon.com/s3/features/object-lambda/). This AWS service allows you to add your own code to S3 GET requests to modify and process data as it is returned to an application. In this case, the `ObjectLambdaFunction` adds access restrictions and resizing features to the data returned by the S3 REST API.
+
+The access restrictions ensure that only authorized users can access specific media files, while the resizing feature dynamically resizes images on demand. This is done without the need to store multiple sizes of each image, saving storage space and making the management of large media libraries more efficient.
+
+More detail about the Lambda function is available in the **[Lambda Function description](./docs/lambda-function-description.md)** documentation.
 
 ## Deployment
 
@@ -57,7 +81,7 @@ wp access network-update-dynamodb
 
 The parameters of the BU production deployment are in the `samconfig.toml` file under the "prod" stanza.
 
-Deployments are handled automatically by a Github Action that runs a `sam build` and `sam deploy` with the `prod` configuration when a commit is made to the `main` branch. More details about the Github Action are available in the [Continuous integration/deployment (CI/CD)](./docs/cicd.md) documentation.
+Deployments are handled automatically by a Github Action that runs a `sam build` and `sam deploy` with the `prod` configuration when a commit is made to the `main` branch. More details about the Github Action are available in the **[Continuous integration/deployment (CI/CD)](./docs/cicd.md)** documentation.
 
 ## Testing
 
