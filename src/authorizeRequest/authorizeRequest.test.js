@@ -34,7 +34,7 @@ ddbMock.on(GetCommand, {
     }),
   },
 }).on(GetCommand, {
-  Key: { PK: 'example.host.bu.edu/#somegroup' },
+  Key: { PK: 'example.host.bu.edu#somegroup' },
 }).resolves({
   Item: {
     rules: JSON.stringify({

@@ -52,8 +52,9 @@ async function authorizeRequest(userRequest, siteRule) {
     siteName = isRootSite ? '' : Object.keys(siteRule)[0].split('/')[1];
   }
 
-  // This still has problems with the root site, since there is no site name it will leave a useless trailing slash.
-  const siteAndGroupKey = `${domain}/${siteName}#${groupName}`;
+  // Calculate the key differently for the root site versus a sub-site (with a non-empty siteName).
+  // This is to avoid a key with a trailing slash for the root site.
+  const siteAndGroupKey = siteName ? `${domain}/${siteName}#${groupName}` : `${domain}#${groupName}`;
 
   // Special handling for the entire-bu-community group, which only requires a valid BU login.
   if (groupName === 'entire-bu-community') {
