@@ -104,6 +104,12 @@ Resources:
                 - dynamodb:UpdateItem
                 - dynamodb:Query
                 - dynamodb:Scan
+            # Allow user to read and write to the SSM parameter.
+            - Effect: Allow
+              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/NetworkRanges
+              Action: 
+                - ssm:GetParameter
+                - ssm:PutParameter
 
   # Access key for the bucket user. Will be stored in secrets manager.
   AccessKey:
@@ -149,6 +155,7 @@ Resources:
         Variables:
           DYNAMODB_TABLE: !Ref AccessControlDynamoDB
           ORIGINAL_BUCKET: !Ref S3Bucket
+          RANGES_SSM_PARAMETER_NAME: !Ref SSMParameter
       # The function needs permission to call back to the S3 Object Lambda Access Point with the WriteGetObjectResponse.
       Policies:
         - DynamoDBReadPolicy:
@@ -159,6 +166,11 @@ Resources:
           - Effect: Allow
             Action: 's3-object-lambda:WriteGetObjectResponse'
             Resource: '*'
+        # The function needs permission to read the SSM parameter.
+        - Statement:
+          - Effect: Allow
+            Action: 'ssm:GetParameter'
+            Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/NetworkRanges
   
   # DynamoDB table
   AccessControlDynamoDB:
@@ -168,6 +180,13 @@ Resources:
         Name: PK
         Type: String
       TableName: !Sub ${AWS::StackName}-AccessControl
+  ## SSM Parameter for network ranges
+  SSMParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${AWS::StackName}/NetworkRanges
+      Type: String
+      Value: '[{"localhost":{"start": "127.0.0.0", "end": "127.0.0.2", "cidrs": []}}]'
 
 Outputs:
   S3BucketName:
