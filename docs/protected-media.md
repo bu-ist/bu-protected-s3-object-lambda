@@ -85,7 +85,7 @@ In this example, each named range (like "crc" or "bmc") is associated with an ar
 
 The SSM parameter is defined in the SAM template with a name based on the stack name and then `/NetworkRanges`. It is a `String` type parameter, and the value consists of a JSON encoded object with the named ranges as keys and the list of IP address ranges as values. The Object Lambda function gets a reference to the name of the SSM parameter from the environment variables and uses the AWS SDK to get the parameter value. The Lambda gets permission to read the parameter from a policy statement in the SAM template.
 
-The IAM user defined in the template is also granted read a write access to the SSM parameter in the SAM template. This means that the IAM user can initialize and update the SSM parameter with new network ranges as needed. At Boston University, there is a WP-CLI command that can be used to update the SSM parameter with the current network ranges defined in the BU Access Control Plugin. The command is:
+The IAM user defined in the template is also granted read and write access to the SSM parameter in the SAM template. This means that the IAM user can initialize and update the SSM parameter with new network ranges as needed. At Boston University, there is a WP-CLI command that can be used to update the SSM parameter with the current network ranges defined in the BU Access Control Plugin. The command is:
 
 ```bash
 wp access update-network-ranges
