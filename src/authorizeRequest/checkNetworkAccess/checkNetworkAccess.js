@@ -1,7 +1,7 @@
 import { ip2long } from './ip2long.js';
 import { rangeSets } from './ranges.js';
 
-function checkNetworkAccess(rules, headers) {
+function checkNetworkAccess(rules, headers, networkRanges) {
   // Get the user ip address from the headers, with a default value of an empty string.
   const {
     'X-Real-Ip': userIp = '',
@@ -12,8 +12,8 @@ function checkNetworkAccess(rules, headers) {
 
   // Extract the network ranges from the campus names in the rule.
   const rangesToCheck = ranges.reduce((accumulator, range) => {
-    if (rangeSets[range]) {
-      accumulator = accumulator.concat(rangeSets[range]);
+    if (networkRanges[range]) {
+      accumulator = accumulator.concat(networkRanges[range]);
     }
     return accumulator;
   }, []);

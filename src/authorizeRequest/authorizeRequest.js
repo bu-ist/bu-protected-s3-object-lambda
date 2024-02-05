@@ -4,7 +4,7 @@ import { DynamoDB } from '@aws-sdk/client-dynamodb';
 import { checkUserAccess } from './checkUserAccess.js';
 import { checkNetworkAccess } from './checkNetworkAccess/checkNetworkAccess.js';
 
-async function authorizeRequest(userRequest, siteRule) {
+async function authorizeRequest(userRequest, siteRule, networkRanges) {
   // Check if the user is authorized to access the object.
   const { url, headers } = userRequest;
 
@@ -84,7 +84,7 @@ async function authorizeRequest(userRequest, siteRule) {
 
   // Apply the rules.
   const userAllowed = checkUserAccess(rules, headers);
-  const networkAllowed = checkNetworkAccess(rules, headers);
+  const networkAllowed = checkNetworkAccess(rules, headers, networkRanges);
 
   // Check for a satisfy all flag in the rules, default to false.
   const { satisfy_all: satisfyAll = false } = rules;
