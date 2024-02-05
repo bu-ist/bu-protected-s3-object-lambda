@@ -186,7 +186,7 @@ Resources:
     Properties:
       Name: !Sub /${AWS::StackName}/NetworkRanges
       Type: String
-      Value: '[{"localhost":{"start": "127.0.0.0", "end": "127.0.0.2", "cidrs": []}}]'
+      Value: '{"localhost": [{"start": "127.0.0.1","end": "127.0.0.2"}]}'
 
 Outputs:
   S3BucketName:
