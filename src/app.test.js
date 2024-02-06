@@ -2,13 +2,16 @@ import { describe, it, expect } from 'vitest';
 import { mockClient } from 'aws-sdk-client-mock';
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
+import { GetParameterCommand, SSMClient } from '@aws-sdk/client-ssm';
 
 // Import the function to test.
 import { handler } from './app';
 
 const ddbMock = mockClient(DynamoDBDocumentClient);
+const ssmMock = mockClient(SSMClient);
 
 process.env.DYNAMODB_TABLE = 'test-table';
+process.env.RANGES_SSM_PARAMETER_NAME = 'test-parameter';
 
 // Mock the ddb client.
 ddbMock.on(GetCommand, {
@@ -32,6 +35,15 @@ ddbMock.on(GetCommand, {
       ranges: ['crc'],
       satisfy_all: false,
     }),
+  },
+});
+
+// Mock the ssm client.
+ssmMock.on(GetParameterCommand).resolves({
+  Parameter: {
+    Value: JSON.stringify([
+      { localhost: { start: '127.0.0.0', end: '127.0.0.2', cidrs: [] } },
+    ]),
   },
 });
 
