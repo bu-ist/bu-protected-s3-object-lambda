@@ -68,13 +68,22 @@ async function authorizeRequest(userRequest, siteRule, networkRanges) {
   // Get the rules for the group.
   // Need to skip this for the entire-bu-community group, since it is not in the database.
   // to avoid INFO Failed to find the group in DynamoDB for group:  entire-bu-community
-  const { Item } = await dynamoDb.get({
-    TableName: tableName,
-    Key: { PK: siteAndGroupKey },
-  });
+  let response;
+  try {
+    response = await dynamoDb.get({
+      TableName: tableName,
+      Key: { PK: siteAndGroupKey },
+    });
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error(error);
+  }
+
+  const { Item } = response;
 
   if (Item == null) {
     // If the group rules are not found, log the error then deny access.
+    // eslint-disable-next-line no-console
     console.log('Failed to find the group in DynamoDB for group: ', groupName);
     return false;
   }
