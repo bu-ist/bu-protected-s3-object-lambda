@@ -5,7 +5,7 @@ import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
 
 // Import the function to test.
-import { getOrCreateObject } from './getOrCreateObject';
+import { getOrCreateObject } from './getOrCreateObject.js';
 
 process.env.DYNAMODB_TABLE = 'test-table';
 
@@ -39,6 +39,17 @@ describe('getOrCreateObject', () => {
     const result = await getOrCreateObject(
       {
         url: 'https://example-1111.s3-object-lambda.us-east-1.amazonaws.com/files/01/example-758x460.jpg?resize-position=left',
+        headers: { },
+      },
+      'www.bu.edu',
+    );
+    expect(result.Body).toBeDefined();
+  });
+
+  it('should correctly handle unicode characters', async () => {
+    const result = await getOrCreateObject(
+      {
+        url: 'https://example-1111.s3-object-lambda.us-east-1.amazonaws.com/site/files/01/file-with-ñ.jpg',
         headers: { },
       },
       'www.bu.edu',

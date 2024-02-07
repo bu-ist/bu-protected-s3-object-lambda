@@ -116,4 +116,4 @@ export async function handler(event) {
 
   // Exit the Lambda function.
   return { statusCode: 200 };
-};
+}

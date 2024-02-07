@@ -1,9 +1,6 @@
 {
     "env": {
-        "node": true,
-        "commonjs": true,
-        "es2021": true,
-        "jest": true
+        "node": true
     },
     "extends": ["airbnb-base"],
     "overrides": [
@@ -14,5 +11,6 @@
     "rules": {
         "import/prefer-default-export": "off",
         "import/extensions": ["error", "ignorePackages"],
+        "import/no-extraneous-dependencies": ["error", {"packageDir": ["./", "./src"]}]
     }
 }

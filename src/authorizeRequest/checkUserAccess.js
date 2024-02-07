@@ -10,7 +10,9 @@ function checkUserAccess(rules, headers) {
   const userName = eppn.split('@')[0];
 
   // Unpack the rules, with defaults.
-  const { users = [], states: affiliations = [], entitlements = [], admins = [] } = rules;
+  const {
+    users = [], states: affiliations = [], entitlements = [], admins = [],
+  } = rules;
 
   // Merge the users and admins arrays.
   const allowedUsers = [...users, ...admins];

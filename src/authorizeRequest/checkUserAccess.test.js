@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { checkUserAccess } from './checkUserAccess';
+import { checkUserAccess } from './checkUserAccess.js';
 
 // Setup an example rules object.
 const exampleUserRules = {

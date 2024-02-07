@@ -5,7 +5,7 @@ import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
 import { GetParameterCommand, SSMClient } from '@aws-sdk/client-ssm';
 
 // Import the function to test.
-import { handler } from './app';
+import { handler } from './app.js';
 
 const ddbMock = mockClient(DynamoDBDocumentClient);
 const ssmMock = mockClient(SSMClient);

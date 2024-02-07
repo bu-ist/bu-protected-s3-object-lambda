@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { checkNetworkAccess } from './checkNetworkAccess';
+import { checkNetworkAccess } from './checkNetworkAccess.js';
 
 const testRanges = {
   campus1: [
