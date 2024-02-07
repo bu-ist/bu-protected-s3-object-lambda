@@ -78,4 +78,15 @@ describe('getOrCreateObject', () => {
     );
     expect(result.Body).toBeDefined();
   });
+
+  it('should return an error if the object does not exist', async () => {
+    const result = await getOrCreateObject(
+      {
+        url: 'https://example-1111.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/01/does-not-exist.jpg',
+        headers: { },
+      },
+      'www.bu.edu',
+    );
+    expect(result.Code).toEqual('NoSuchKey');
+  });
 });
