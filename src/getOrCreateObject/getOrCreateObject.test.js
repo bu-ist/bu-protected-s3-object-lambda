@@ -45,4 +45,15 @@ describe('getOrCreateObject', () => {
     );
     expect(result.Body).toBeDefined();
   });
+
+  it('should correctly handle unicode characters', async () => {
+    const result = await getOrCreateObject(
+      {
+        url: 'https://example-1111.s3-object-lambda.us-east-1.amazonaws.com/site/files/01/file-with-ñ.jpg',
+        headers: { },
+      },
+      'www.bu.edu',
+    );
+    expect(result.Body).toBeDefined();
+  });
 });
