@@ -5,7 +5,7 @@ import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
 
 // Import the function to test.
-import { getOrCreateObject } from './getOrCreateObject';
+import { getOrCreateObject } from './getOrCreateObject.js';
 
 process.env.DYNAMODB_TABLE = 'test-table';
 

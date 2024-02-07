@@ -4,7 +4,7 @@ import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
 
 const ddbMock = mockClient(DynamoDBDocumentClient);
 
-import { lookupCustomCrop } from './lookupCustomCrop';
+import { lookupCustomCrop } from './lookupCustomCrop.js';
 
 // Table name is not relevant for these tests, but has to exist for the mocked ddb client.
 process.env.DYNAMODB_TABLE = 'test-table';
