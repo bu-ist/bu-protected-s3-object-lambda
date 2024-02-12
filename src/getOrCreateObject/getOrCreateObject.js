@@ -4,8 +4,6 @@ import { lookupCustomCrop } from './resizeAndSave/lookupCustomCrop.js';
 import { resizeAndSave } from './resizeAndSave.js';
 import { ORIGINAL_PATH_ROOT, RENDER_PATH_ROOT } from './pathConstants.js';
 
-const bucketName = process.env.ORIGINAL_BUCKET;
-
 const s3 = new S3();
 
 // Try to get an object from S3, and return either the valid response, or the error.
@@ -13,7 +11,7 @@ async function tryGetObject(userRequest, s3Key) {
   let response;
   try {
     response = await s3.getObject({
-      Bucket: bucketName,
+      Bucket: process.env.ORIGINAL_BUCKET,
       Key: s3Key,
       Range: userRequest.headers?.Range,
     });
