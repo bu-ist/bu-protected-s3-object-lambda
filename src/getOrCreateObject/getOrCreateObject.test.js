@@ -57,7 +57,7 @@ describe('getOrCreateObject', () => {
     expect(result.Body).toBeDefined();
   });
 
-  it('should find the unscaled original for the request, scale it with the parsed crop value, and return an an object', async () => {
+  it('should find the unscaled original for the request, scale it with the parsed crop value, and return an object', async () => {
     const result = await getOrCreateObject(
       {
         url: 'https://example-1111.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/01/exists-758x460.jpg?resize-position=left',
