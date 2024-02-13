@@ -7,6 +7,8 @@ import { getOrCreateObject } from './getOrCreateObject/getOrCreateObject.js';
 import { getProtectedSites } from './authorizeRequest/getProtectedSites.js';
 import { getRangesSSM } from './authorizeRequest/getRangesSSM.js';
 
+import { notFoundPage, forbiddenPage, loginRedirectPage } from './handler/responsePages.js';
+
 const s3 = new S3();
 
 // Cache protected sites to reduce DynamoDB calls.
@@ -88,7 +90,7 @@ export async function handler(event) {
     // because they are logged in but not authorized.
     if (userRequest.headers.Eppn) {
       params.StatusCode = 200;
-      params.Body = `<html><body><h1>Access Denied</h1><p>You are not authorized to access this content.</p></body></html>`;
+      params.Body = forbiddenPage;
       params.ContentType = 'text/html';
       await s3.writeGetObjectResponse(params);
       return { statusCode: 200 };
@@ -100,11 +102,8 @@ export async function handler(event) {
     // Extract the Shib-Handler from the headers, if it exists.
     const shibHandler = userRequest.headers['Shib-Handler'];
 
-    // Construct the login url.
-    const loginUrl = `${shibHandler}/Login?target=${encodeURIComponent(returnUrl)}`;
-
     params.StatusCode = 200;
-    params.Body = `<a href="${loginUrl}">log in to see protected content</a>`;
+    params.Body = loginRedirectPage(shibHandler, returnUrl);
     params.ContentType = 'text/html';
 
     await s3.writeGetObjectResponse(params);
@@ -119,7 +118,7 @@ export async function handler(event) {
   // If the object is not found, return a 404 Not Found response.
   if (response.Code === 'NoSuchKey') {
     params.StatusCode = 200;
-    params.Body = '<html><body><h1>Not Found</h1></body></html>';
+    params.Body = notFoundPage;
     params.ContentType = 'text/html';
   } else {
     // If the object is found, return its data with a 200 OK response.
