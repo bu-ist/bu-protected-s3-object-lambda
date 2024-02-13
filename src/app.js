@@ -86,6 +86,16 @@ export async function handler(event) {
     params.StatusCode = 403;
     params.ErrorMessage = 'Access Denied';
 
+    // Check for a valid login; if there is one return a forbidden message,
+    // because they are logged in but not authorized.
+    if (userRequest.headers.Eppn) {
+      params.StatusCode = 200;
+      params.Body = `<html><body><h1>Access Denied</h1><p>You are not authorized to access this content.</p></body></html>`;
+      params.ContentType = 'text/html';
+      await s3.writeGetObjectResponse(params);
+      return { statusCode: 200 };
+    }
+
     await s3.writeGetObjectResponse(params);
 
     // Exit the Lambda function (the status code is for the lambda, not the user response).
