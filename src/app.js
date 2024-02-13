@@ -63,7 +63,8 @@ export async function handler(event) {
 
   // This is repeated from authorizeRequest.js, should probably be refactored.
   // Parse the path segments from the URL to check if this is a protected site.
-  const pathSegments = new URL(userRequest.url).pathname.split('/');
+  const parsedUrl = new URL(userRequest.url);
+  const pathSegments = parsedUrl.pathname.split('/');
   // If the 'files' segment is the second segment, this is a root site.
   const isRootSite = pathSegments.indexOf('files') === 1;
   const sitePath = isRootSite ? domain : `${domain}/${pathSegments[1]}`;
