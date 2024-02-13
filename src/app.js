@@ -97,8 +97,9 @@ export async function handler(event) {
 
   // If the object is not found, return a 404 Not Found response.
   if (response.Code === 'NoSuchKey') {
-    params.ErrorMessage = 'Not Found';
-    params.StatusCode = 404;
+    params.StatusCode = 200;
+    params.Body = '<html><body><h1>Not Found</h1></body></html>';
+    params.ContentType = 'text/html';
   } else {
     // If the object is found, return its data with a 200 OK response.
     params.Body = response.Body;
