@@ -83,8 +83,6 @@ export async function handler(event) {
   // If the user is not authorized, return a 403 Forbidden response.
   if (!authorized) {
     // If the user is not authorized, return a 403 Access Denied response.
-    params.StatusCode = 403;
-    params.ErrorMessage = 'Access Denied';
 
     // Check for a valid login; if there is one return a forbidden message,
     // because they are logged in but not authorized.
@@ -95,6 +93,19 @@ export async function handler(event) {
       await s3.writeGetObjectResponse(params);
       return { statusCode: 200 };
     }
+
+    // Construct the url for the login page to redirect back to, this will be the domain from the request headers and the path from the userRequest.url.
+    const returnUrl = `https://${domain}${parsedUrl.pathname}`;
+
+    // Extract the Shib-Handler from the headers, if it exists.
+    const shibHandler = userRequest.headers['Shib-Handler'];
+
+    // Construct the login url.
+    const loginUrl = `${shibHandler}/Login?target=${encodeURIComponent(returnUrl)}`;
+
+    params.StatusCode = 200;
+    params.Body = `<a href="${loginUrl}">log in to see protected content</a>`;
+    params.ContentType = 'text/html';
 
     await s3.writeGetObjectResponse(params);
 
