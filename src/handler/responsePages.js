@@ -1,8 +1,23 @@
+const pageCSS = `
+body {
+    font-family: "Benton-Sans", sans-serif;
+    color: #555;
+}
+h1 {
+    font-size: 3em;
+    color: #000;
+    padding: 3em;
+}
+`;
+
 const notFoundPage = `
 <!DOCTYPE html>
 <html>
 <head>
     <title>404 Not Found</title>
+    <style type="text/css">
+        ${pageCSS}
+    </style>
 </head>
 <body>
     <h1>404 Not Found</h1>
