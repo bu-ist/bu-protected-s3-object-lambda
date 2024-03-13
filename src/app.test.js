@@ -128,15 +128,14 @@ describe('handler', () => {
   });
 
   // Non-existent objects return a 200 response.
-  // We need to return a 200 response because we have to return a real html page,
-  // and the only way to return a real html page is to return a 200 response.
+  // The status code is for the Lambda, not the user response.
   it('should return a 200 response for non-existent object', async () => {
     const result = await handler(nonExistentObjectEvent);
     expect(result.statusCode).toEqual(200);
   });
 
   // Forbidden requests return a 200 response.
-  // Hard to test, but the s3.writeGetObjectResponse should be a forbidden response.
+  // The status code is for the Lambda, not the user response.
   it('should return a 200 response for forbidden request', async () => {
     const result = await handler(forbiddenEvent);
     expect(result.statusCode).toEqual(200);
