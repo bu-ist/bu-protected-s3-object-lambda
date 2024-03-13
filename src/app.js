@@ -7,8 +7,6 @@ import { getOrCreateObject } from './getOrCreateObject/getOrCreateObject.js';
 import { getProtectedSites } from './authorizeRequest/getProtectedSites.js';
 import { getRangesSSM } from './authorizeRequest/getRangesSSM.js';
 
-import { notFoundPage, forbiddenPage, loginRedirectPage } from './handler/responsePages.js';
-
 const s3 = new S3();
 
 // Cache protected sites to reduce DynamoDB calls.
@@ -89,22 +87,15 @@ export async function handler(event) {
     // Check for a valid login; if there is one return a forbidden message,
     // because they are logged in but not authorized.
     if (userRequest.headers.Eppn) {
-      params.StatusCode = 200;
-      params.Body = forbiddenPage;
-      params.ContentType = 'text/html';
+      params.StatusCode = 403;
+      params.ErrorMessage = '403 Forbidden, you are logged in but not authorized to access this resource.';
       await s3.writeGetObjectResponse(params);
       return { statusCode: 200 };
     }
 
-    // Construct the url for the login page to redirect back to, this will be the domain from the request headers and the path from the userRequest.url.
-    const returnUrl = `https://${domain}${parsedUrl.pathname}`;
-
-    // Extract the Shib-Handler from the headers, if it exists.
-    const shibHandler = userRequest.headers['Shib-Handler'];
-
-    params.StatusCode = 200;
-    params.Body = loginRedirectPage(shibHandler, returnUrl);
-    params.ContentType = 'text/html';
+    // Otherwise, if there's not a login session, return a 401 Unauthorized response.
+    params.StatusCode = 401;
+    params.ErrorMessage = '401 Unauthorized, you have requested a restricted resource but are not logged in.';
 
     await s3.writeGetObjectResponse(params);
 
@@ -117,9 +108,8 @@ export async function handler(event) {
 
   // If the object is not found, return a 404 Not Found response.
   if (response.Code === 'NoSuchKey') {
-    params.StatusCode = 200;
-    params.Body = notFoundPage;
-    params.ContentType = 'text/html';
+    params.StatusCode = 404;
+    params.ErrorMessage = '404 Not Found';
   } else {
     // If the object is found, return its data with a 200 OK response.
     params.Body = response.Body;
