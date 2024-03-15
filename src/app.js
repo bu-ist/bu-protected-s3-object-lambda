@@ -63,7 +63,8 @@ export async function handler(event) {
 
   // This is repeated from authorizeRequest.js, should probably be refactored.
   // Parse the path segments from the URL to check if this is a protected site.
-  const pathSegments = new URL(userRequest.url).pathname.split('/');
+  const parsedUrl = new URL(userRequest.url);
+  const pathSegments = parsedUrl.pathname.split('/');
   // If the 'files' segment is the second segment, this is a root site.
   const isRootSite = pathSegments.indexOf('files') === 1;
   const sitePath = isRootSite ? domain : `${domain}/${pathSegments[1]}`;
@@ -82,8 +83,19 @@ export async function handler(event) {
   // If the user is not authorized, return a 403 Forbidden response.
   if (!authorized) {
     // If the user is not authorized, return a 403 Access Denied response.
-    params.StatusCode = 403;
-    params.ErrorMessage = 'Access Denied';
+
+    // Check for a valid login; if there is one return a forbidden message,
+    // because they are logged in but not authorized.
+    if (userRequest.headers.Eppn) {
+      params.StatusCode = 403;
+      params.ErrorMessage = '403 Forbidden, you are logged in but not authorized to access this resource.';
+      await s3.writeGetObjectResponse(params);
+      return { statusCode: 200 };
+    }
+
+    // Otherwise, if there's not a login session, return a 401 Unauthorized response.
+    params.StatusCode = 401;
+    params.ErrorMessage = '401 Unauthorized, you have requested a restricted resource but are not logged in.';
 
     await s3.writeGetObjectResponse(params);
 
@@ -96,7 +108,7 @@ export async function handler(event) {
 
   // If the object is not found, return a 404 Not Found response.
   if (response.Code === 'NoSuchKey') {
-    params.ErrorMessage = 'Not Found';
+    params.ErrorMessage = '404 Not Found';
     params.StatusCode = 404;
   } else {
     // If the object is found, return its data with a 200 OK response.

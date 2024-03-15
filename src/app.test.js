@@ -12,6 +12,7 @@ const ssmMock = mockClient(SSMClient);
 
 process.env.DYNAMODB_TABLE = 'test-table';
 process.env.RANGES_SSM_PARAMETER_NAME = 'test-parameter';
+process.env.ORIGINAL_BUCKET = 'test-bucket';
 
 // Mock the ddb client.
 ddbMock.on(GetCommand, {
@@ -47,11 +48,17 @@ ssmMock.on(GetParameterCommand).resolves({
   },
 });
 
-// Mock the s3 client; this just returns a valid object for any get request.
+// Mock the s3 client, by default just return a valid object for any get request.
 const s3Mock = mockClient(S3Client);
 s3Mock.on(GetObjectCommand).resolves({
   Body: 'test',
 });
+
+// Add a more specific mocked S3 event for a non-existent object.
+s3Mock.on(GetObjectCommand, {
+  Bucket: process.env.ORIGINAL_BUCKET,
+  Key: 'original_media/example.host.bu.edu/site/files/01/no-such-file.jpg',
+}).rejects({ Code: 'NoSuchKey' });
 
 const publicMediaEvent = {
   userRequest: {
@@ -71,6 +78,34 @@ const protectedSiteEvent = {
     url: 'https://example-1111.s3-object-lambda.us-east-1.amazonaws.com/protected/files/01/example.jpg',
     headers: {
       'X-Forwarded-Host': 'example.host.bu.edu',
+      'Shib-Handler': 'https://example.host.bu.edu/saml/wp-app/shibboleth',
+    },
+  },
+  getObjectContext: {
+    outputRoute: 'test',
+    outputToken: 'test',
+  },
+};
+
+const nonExistentObjectEvent = {
+  userRequest: {
+    url: 'https://example-1111.s3-object-lambda.us-east-1.amazonaws.com/site/files/01/no-such-file.jpg',
+    headers: {
+      'X-Forwarded-Host': 'example.host.bu.edu',
+    },
+  },
+  getObjectContext: {
+    outputRoute: 'test',
+    outputToken: 'test',
+  },
+};
+
+const forbiddenEvent = {
+  userRequest: {
+    url: 'https://example-1111.s3-object-lambda.us-east-1.amazonaws.com/protected/files/01/example.jpg',
+    headers: {
+      Eppn: 'valid-but-unauthorized@bu.edu',
+      'X-Forwarded-Host': 'example.host.bu.edu',
     },
   },
   getObjectContext: {
@@ -84,11 +119,25 @@ describe('handler', () => {
     const result = await handler(publicMediaEvent);
     expect(result.statusCode).toEqual(200);
   });
-});
 
-// The Lambda returns a 200 response for everything as long as the Lambda itself doesn't crash.
-// Which makes it a little hard to test, but this tests that protected media requests don't crash.
-it('should return a 200 response for protected media request', async () => {
-  const result = await handler(protectedSiteEvent);
-  expect(result.statusCode).toEqual(200);
+  // The Lambda returns a 200 response for everything as long as the Lambda itself doesn't crash.
+  // Which makes it a little hard to test, but this tests that protected media requests don't crash.
+  it('should return a 200 response for protected media request', async () => {
+    const result = await handler(protectedSiteEvent);
+    expect(result.statusCode).toEqual(200);
+  });
+
+  // Non-existent objects return a 200 response.
+  // The status code is for the Lambda, not the user response.
+  it('should return a 200 response for non-existent object', async () => {
+    const result = await handler(nonExistentObjectEvent);
+    expect(result.statusCode).toEqual(200);
+  });
+
+  // Forbidden requests return a 200 response.
+  // The status code is for the Lambda, not the user response.
+  it('should return a 200 response for forbidden request', async () => {
+    const result = await handler(forbiddenEvent);
+    expect(result.statusCode).toEqual(200);
+  });
 });
