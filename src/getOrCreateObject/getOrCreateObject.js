@@ -71,9 +71,16 @@ async function getOrCreateObject(userRequest, domain) {
     const originalKey = `${ORIGINAL_PATH_ROOT}/${domain}${originalPath}`;
 
     const originalResponse = await tryGetObject(userRequest, originalKey);
-    // If there's no original image, then return the 404 response.
+    // If there's no original image, then do one more check for a "pre-scaled" original.
     if (originalResponse.Code === 'NoSuchKey') {
-      return response;
+      // Run an extra check here to see if this is a "pre-scaled" image in the original media path
+      // where the original has the size in the name.
+      const prescaledOriginalKey = `${ORIGINAL_PATH_ROOT}/${domain}${decodedPathname}`;
+      const prescaledOriginalResponse = await tryGetObject(userRequest, prescaledOriginalKey);
+
+      // This was our last chance to find and image, so return the reponse
+      // whether it is a file or a 404
+      return prescaledOriginalResponse;
     }
     // If there is an original, resize the image data with sharp and save it for future requests.
     const resized = await resizeAndSave(originalResponse, `/${domain}${originalPath}`, sizeMatch, crop);
