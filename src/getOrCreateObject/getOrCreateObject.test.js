@@ -45,6 +45,15 @@ s3Mock.on(GetObjectCommand, {
   Body: singlePixelJpgReadable,
 });
 
+// Define a pre-scaled object in the bucket,
+// with a scale factor baked into the name of the original.
+s3Mock.on(GetObjectCommand, {
+  Bucket: 'test-bucket',
+  Key: 'original_media/www.bu.edu/somesite/files/01/prescaled-758x460.jpg',
+}).resolves({
+  Body: singlePixelJpgReadable,
+});
+
 describe('getOrCreateObject', () => {
   it('should return an object if it exists', async () => {
     const result = await getOrCreateObject(
@@ -88,5 +97,16 @@ describe('getOrCreateObject', () => {
       'www.bu.edu',
     );
     expect(result.Code).toEqual('NoSuchKey');
+  });
+
+  it('should return a pre-scaled original object if it exists', async () => {
+    const result = await getOrCreateObject(
+      {
+        url: 'https://example-1111.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/01/prescaled-758x460.jpg',
+        headers: { },
+      },
+      'www.bu.edu',
+    );
+    expect(result.Body).toBeDefined();
   });
 });
