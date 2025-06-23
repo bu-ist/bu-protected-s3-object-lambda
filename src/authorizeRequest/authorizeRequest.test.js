@@ -177,4 +177,16 @@ describe('authorizeRequest', () => {
     const result = await authorizeRequest(userRequest, siteRule, testRanges);
     expect(result).toBe(true);
   });
+
+  // Check that gravityforms files are protected by a login session, that is it has no EPPN header.
+  it('should return false if the request is for a gravityforms file and there is no logged in user', async () => {
+    const userRequest = {
+      url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/gravityforms/somefile.json',
+      headers: {
+        'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
+      },
+    };
+    const result = await authorizeRequest(userRequest, null, testRanges);
+    expect(result).toBe(false);
+  });
 });
