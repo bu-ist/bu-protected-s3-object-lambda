@@ -44,7 +44,7 @@ async function authorizeRequest(userRequest, siteRule, networkRanges) {
     isRootSite = Object.keys(siteRule)[0] === domain;
   }
 
-  if (!groupName && url.includes('files/gravity_forms')) {
+  if (!groupName && url.includes('/files/gravity_forms/')) {
     groupName = 'entire-bu-community';
   }
 

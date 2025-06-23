@@ -75,7 +75,7 @@ export async function handler(event) {
   // Check access restrictions.
   // Unrestricted items are always allowed, and should be sent with a cache control header to tell CloudFront to cache the item.
   // Will need to account for whole site protections here.
-  const isPublic = !userRequest.url.includes('__restricted') && !siteRule && !userRequest.url.includes('files/gravity_forms');
+  const isPublic = !userRequest.url.includes('__restricted') && !siteRule && !userRequest.url.includes('/files/gravity_forms/');
 
   // Check if the user is authorized to access the object (always true for public items).
   const authorized = isPublic ? true : await authorizeRequest(userRequest, siteRule, cachedRanges.ranges);
