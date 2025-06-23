@@ -44,6 +44,10 @@ async function authorizeRequest(userRequest, siteRule, networkRanges) {
     isRootSite = Object.keys(siteRule)[0] === domain;
   }
 
+  if (!groupName && url.contains('files/gravity_forms')) {
+    groupName = 'entire-bu-community';
+  }
+
   // Detect if this is the root site by the position of the __restricted segment.
   // Not sure if this should be detected by position of '__restricted' or by proximity to 'files'.
   let siteName = isRootSite ? '' : pathSegments[indexOfRestricted - 2];
