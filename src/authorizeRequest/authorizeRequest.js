@@ -44,6 +44,8 @@ async function authorizeRequest(userRequest, siteRule, networkRanges) {
     isRootSite = Object.keys(siteRule)[0] === domain;
   }
 
+  // Restrict files in the gravity_forms directory to the entire-bu-community group.
+  // This is hardcoded because gravity_forms always writes to this directory, and we protect it.
   if (!groupName && url.includes('/files/gravity_forms/')) {
     groupName = 'entire-bu-community';
   }
