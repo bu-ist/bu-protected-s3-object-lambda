@@ -44,6 +44,12 @@ async function authorizeRequest(userRequest, siteRule, networkRanges) {
     isRootSite = Object.keys(siteRule)[0] === domain;
   }
 
+  // Restrict files in the gravity_forms directory to the entire-bu-community group.
+  // This is hardcoded because gravity_forms always writes to this directory, and we protect it.
+  if (!groupName && url.includes('/files/gravity_forms/')) {
+    groupName = 'entire-bu-community';
+  }
+
   // Detect if this is the root site by the position of the __restricted segment.
   // Not sure if this should be detected by position of '__restricted' or by proximity to 'files'.
   let siteName = isRootSite ? '' : pathSegments[indexOfRestricted - 2];
