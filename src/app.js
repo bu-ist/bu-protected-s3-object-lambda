@@ -75,7 +75,7 @@ export async function handler(event) {
   // Check access restrictions.
   // Unrestricted items are always allowed, and should be sent with a cache control header to tell CloudFront to cache the item.
   // Public items are those that do not have a __restricted segment in the URL, do not have a site rule,
-  // or are not in the gravity_forms directory; we are proctecting the gravity_forms directory.
+  // or are not in the gravity_forms directory; we are protecting the gravity_forms directory.
   const isPublic = !userRequest.url.includes('__restricted') && !siteRule && !userRequest.url.includes('/files/gravity_forms/');
 
   // Check if the user is authorized to access the object (always true for public items).
