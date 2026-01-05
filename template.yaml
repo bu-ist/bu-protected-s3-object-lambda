@@ -147,7 +147,7 @@ Resources:
     Properties:
       CodeUri: src/
       Handler: app.handler
-      Runtime: nodejs18.x
+      Runtime: nodejs22.x
       # We wouldn't leave these defaults this high in production.
       MemorySize: 2048
       Timeout: 30

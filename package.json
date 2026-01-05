@@ -1,6 +1,6 @@
 {
   "name": "bu-protected-s3-object-lambda",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "Delivers asset from S3 through an object lambda with access restrictions and image resizing",
   "type": "module",
   "scripts": {
