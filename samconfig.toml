@@ -25,12 +25,14 @@ tags = "Service=\"websites\" Function=\"wordpress\" Project=\"bu-wp-to-cloud\" L
 image_repositories = []
 no-prompts = true
 
+[dev]
+[dev.deploy]
 [dev.deploy.parameters]
 stack_name = "wordpress-protected-s3-dev"
 resolve_s3 = true
 tags = "Service=\"websites\" Function=\"wordpress\" Project=\"bu-wp-to-cloud\" Landscape=\"dev\""
 s3_prefix = "wordpress-protected-s3-dev"
 region = "us-east-1"
-confirm_changeset = true
+confirm_changeset = false
 capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM"
 image_repositories = []
