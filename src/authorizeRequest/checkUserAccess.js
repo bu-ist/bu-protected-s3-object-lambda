@@ -9,6 +9,11 @@ function checkUserAccess(rules, headers) {
   // Get the userName as the unscoped eppn ( e.g. the email without the @domain).
   const userName = eppn.split('@')[0];
 
+  // If we got an empty userName, fail to restrict the request.
+  if (userName.trim() === '') {
+    return false;
+  }
+
   // Unpack the rules, with defaults.
   const {
     users = [], states: affiliations = [], entitlements = [], admins = [],
