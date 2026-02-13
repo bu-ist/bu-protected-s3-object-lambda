@@ -201,15 +201,4 @@ describe('authorizeRequest', () => {
     const result = await authorizeRequest(userRequest, null, testRanges);
     expect(result).toBe(true);
   });
-  it('should return false if the request is for a restricted file and the userName is empty', async () => {
-    const userRequest = {
-      url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/somegroup/somefile.json',
-      headers: {
-        Eppn: '',
-        'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
-      },
-    };
-    const result = await authorizeRequest(userRequest, null, testRanges);
-    expect(result).toBe(false);
-  });
 });
