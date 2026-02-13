@@ -63,22 +63,22 @@ describe('checkUserAccess', () => {
     };
     expect(checkUserAccess(exampleUserRules, headers)).toBe(true);
   });
-});
 
-it('should return false if the userName is only whitespace', () => {
-  const headers = {
-    Eppn: '   @bu.edu',
-    'Primary-Affiliation': 'staff',
-    Entitlement: ['https://iam.bu.edu/entitlements/some-entitlement'],
-  };
-  expect(checkUserAccess(exampleUserRules, headers)).toBe(false);
-});
+  it('should return false if the userName is only whitespace', () => {
+    const headers = {
+      Eppn: '   @bu.edu',
+      'Primary-Affiliation': 'staff',
+      Entitlement: ['https://iam.bu.edu/entitlements/some-entitlement'],
+    };
+    expect(checkUserAccess(exampleUserRules, headers)).toBe(false);
+  });
 
-it('should return false if eppn is just the domain', () => {
-  const headers = {
-    Eppn: '@bu.edu',
-    'Primary-Affiliation': 'staff',
-    Entitlement: ['https://iam.bu.edu/entitlements/some-entitlement'],
-  };
-  expect(checkUserAccess(exampleUserRules, headers)).toBe(false);
+  it('should return false if eppn is just the domain', () => {
+    const headers = {
+      Eppn: '@bu.edu',
+      'Primary-Affiliation': 'staff',
+      Entitlement: ['https://iam.bu.edu/entitlements/some-entitlement'],
+    };
+    expect(checkUserAccess(exampleUserRules, headers)).toBe(false);
+  });
 });
