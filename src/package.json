@@ -1,6 +1,6 @@
 {
     "name": "s3-object-lambda-app",
-    "version": "1.0.5",
+    "version": "1.0.7",
     "description": "",
     "main": "app.js",
     "type": "module",
