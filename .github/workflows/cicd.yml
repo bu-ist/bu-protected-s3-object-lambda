@@ -29,7 +29,7 @@
         - uses: aws-actions/setup-sam@v2
         - uses: actions/setup-node@v4.0.3
           with:
-            node-version: '18'
+            node-version: '22'
         - uses: aws-actions/configure-aws-credentials@v2
           with: 
             role-to-assume: arn:aws:iam::115619461932:role/WordpressProtectedAssetsGithubActionsCloudformingRole
