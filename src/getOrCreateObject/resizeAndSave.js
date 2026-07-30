@@ -42,7 +42,7 @@ async function resizeAndSave(data, originalPath, sizeMatch, crop) {
   const imageBuffer = await streamToString(data.Body);
 
   // Resize the image data with sharp.
-  const resized = await sharp(imageBuffer).resize({
+  const resized = await sharp(imageBuffer, { animated: true }).resize({
     width,
     height,
     ...options,
