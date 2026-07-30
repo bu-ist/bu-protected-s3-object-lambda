@@ -13,17 +13,6 @@ const bucketName = process.env.ORIGINAL_BUCKET;
 
 const s3 = new S3();
 
-function getOriginalS3Key(url) {
-  // Reconstruct what the original image s3 key would be, by removing the image size from the URL.
-  const originalUrl = url.replace(/-(\d+)x(\d+)\.(jpg|png)$/, '.$3');
-  const parsedUrl = new URL(originalUrl);
-  const { pathname } = parsedUrl;
-  // The s3 key is the pathname without the leading slash.
-  const s3Key = pathname.replace(/^\//, '');
-
-  return s3Key;
-}
-
 // Resize and save the image to S3, then return the resized image data.
 async function resizeAndSave(data, originalPath, sizeMatch, crop) {
   // Get the width and height from the sizeMatch as integers.
@@ -71,4 +60,4 @@ async function resizeAndSave(data, originalPath, sizeMatch, crop) {
   return resized;
 }
 
-export { getOriginalS3Key, resizeAndSave };
+export { resizeAndSave };
