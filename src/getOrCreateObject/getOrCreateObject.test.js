@@ -15,6 +15,10 @@ process.env.ORIGINAL_BUCKET = 'test-bucket';
 // so that the sharp library has something to resize.
 const singlePixelJpgReadable = Readable.from(Buffer.from('/9j/4AAQSkZJRgABAQEAAAAAAAD/2wBDAAoHBwkHBgoJCAkLCwoMDxkQDw4ODx4WFxIZJCAmJSMgIyIoLTkwKCo2KyIjMkQyNjs9QEBAJjBGS0U+Sjk/QD3/2wBDAQsLCw8NDx0QEB09KSMpPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT3/wAARCAAIAAgDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD9/KKKKAP/2Q==', 'base64'));
 
+// Create a 1 pixel webp image as a readable stream,
+// so that the sharp library has something to resize.
+const singlePixelWebpReadable = Readable.from(Buffer.from('UklGRjwAAABXRUJQVlA4IDAAAADQAQCdASoBAAEAAUAmJaACdLoB+AADsAD+8ut//NgVzXPv9//S4P0uD9Lg/9KQAAA=', 'base64'));
+
 // Mock the ddb client.
 const ddbMock = mockClient(DynamoDBDocumentClient);
 ddbMock.on(GetCommand).resolves({
@@ -52,6 +56,14 @@ s3Mock.on(GetObjectCommand, {
   Key: 'original_media/www.bu.edu/somesite/files/01/prescaled-758x460.jpg',
 }).resolves({
   Body: singlePixelJpgReadable,
+});
+
+// Define an existing webp object in the bucket, that returns a valid and rescalable image.
+s3Mock.on(GetObjectCommand, {
+  Bucket: 'test-bucket',
+  Key: 'original_media/www.bu.edu/somesite/files/01/exists.webp',
+}).resolves({
+  Body: singlePixelWebpReadable,
 });
 
 describe('getOrCreateObject', () => {
@@ -97,6 +109,17 @@ describe('getOrCreateObject', () => {
       'www.bu.edu',
     );
     expect(result.Code).toEqual('NoSuchKey');
+  });
+
+  it('should find the unscaled webp original for the request, scale it, and return an object', async () => {
+    const result = await getOrCreateObject(
+      {
+        url: 'https://example-1111.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/01/exists-300x200.webp',
+        headers: { },
+      },
+      'www.bu.edu',
+    );
+    expect(result.Body).toBeDefined();
   });
 
   it('should return a pre-scaled original object if it exists', async () => {
