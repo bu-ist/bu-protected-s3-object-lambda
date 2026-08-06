@@ -13,18 +13,12 @@ const bucketName = process.env.ORIGINAL_BUCKET;
 
 const s3 = new S3();
 
-function getOriginalS3Key(url) {
-  // Reconstruct what the original image s3 key would be, by removing the image size from the URL.
-  const originalUrl = url.replace(/-(\d+)x(\d+)\.(jpg|png)$/, '.$3');
-  const parsedUrl = new URL(originalUrl);
-  const { pathname } = parsedUrl;
-  // The s3 key is the pathname without the leading slash.
-  const s3Key = pathname.replace(/^\//, '');
-
-  return s3Key;
-}
+// Sharp won't decode an image with more pixels than its limit, 268402689 pixels by default.
+// Animated images count every frame toward that limit, so a long animation can exceed it.
+const PIXEL_LIMIT_MESSAGE = 'exceeds pixel limit';
 
 // Resize and save the image to S3, then return the resized image data.
+// If the image is too large for sharp to resize, return the original image data instead.
 async function resizeAndSave(data, originalPath, sizeMatch, crop) {
   // Get the width and height from the sizeMatch as integers.
   const width = parseInt(sizeMatch[1], 10);
@@ -41,18 +35,32 @@ async function resizeAndSave(data, originalPath, sizeMatch, crop) {
   // This used to not be necessary but changed with the v3 S3 SDK.
   const imageBuffer = await streamToString(data.Body);
 
-  // Resize the image data with sharp.
-  const resized = await sharp(imageBuffer).resize({
-    width,
-    height,
-    ...options,
-  }).withMetadata();
+  // Resize the image data with sharp, and get the resized image data as a buffer.
+  let resized;
+  let resizedBuffer;
+  try {
+    resized = await sharp(imageBuffer, { animated: true }).resize({
+      width,
+      height,
+      ...options,
+    }).withMetadata();
+
+    resizedBuffer = await resized.toBuffer();
+  } catch (error) {
+    // Anything other than the pixel limit is unexpected, so let it propagate.
+    if (!error?.message?.includes(PIXEL_LIMIT_MESSAGE)) {
+      throw error;
+    }
+
+    // This image can't be resized, so serve the original unscaled for this request.
+    // Nothing is saved to S3, because there is no resized image to save.
+    console.log('Resize skipped, the image exceeds the sharp pixel limit: ', originalPath);
+
+    return imageBuffer;
+  }
 
   // Strip file extension from the original s3Key.
   const pathWithoutExtension = originalPath.replace(/\.[^/.]+$/, '');
-
-  // Get the resized image data as a buffer.
-  const resizedBuffer = await resized.toBuffer();
 
   // Encode the original path, so that it can be used in the metadata.
   const encodedPath = encodeURI(originalPath);
@@ -71,4 +79,4 @@ async function resizeAndSave(data, originalPath, sizeMatch, crop) {
   return resized;
 }
 
-export { getOriginalS3Key, resizeAndSave };
+export { resizeAndSave };
