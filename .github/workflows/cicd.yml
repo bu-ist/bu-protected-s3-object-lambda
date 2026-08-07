@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------------------------------------
 # 
 # This is the production continuous integration build github action.
-# Activates on any commit to the main branch.
+# Activates on any commit to the main branch, or manually from the Actions tab.
 #
 # ----------------------------------------------------------------------------------------------------------
 
@@ -12,6 +12,7 @@
     push:
       branches:
         - main
+    workflow_dispatch:
   
   env:
     AWS_REGION: us-east-1
