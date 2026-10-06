@@ -1,6 +1,8 @@
-import { describe, it, expect } from 'vitest';
+import {
+  describe, it, expect, beforeEach,
+} from 'vitest';
 import { mockClient } from 'aws-sdk-client-mock';
-import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { GetObjectCommand, S3Client, WriteGetObjectResponseCommand } from '@aws-sdk/client-s3';
 import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
 import { GetParameterCommand, SSMClient } from '@aws-sdk/client-ssm';
 
@@ -114,6 +116,21 @@ const forbiddenEvent = {
   },
 };
 
+// mod_shib sends Eppn on every request, empty when there is no login session.
+const restrictedAnonymousEvent = {
+  userRequest: {
+    url: 'https://example-1111.s3-object-lambda.us-east-1.amazonaws.com/protected/files/01/example.jpg',
+    headers: {
+      Eppn: '',
+      'X-Forwarded-Host': 'example.host.bu.edu',
+    },
+  },
+  getObjectContext: {
+    outputRoute: 'test',
+    outputToken: 'test',
+  },
+};
+
 describe('handler', () => {
   it('should return a 200 response for public media request', async () => {
     const result = await handler(publicMediaEvent);
@@ -139,5 +156,25 @@ describe('handler', () => {
   it('should return a 200 response for forbidden request', async () => {
     const result = await handler(forbiddenEvent);
     expect(result.statusCode).toEqual(200);
+  });
+
+  describe('answering a denied request', () => {
+    // The handler always returns 200 to Lambda; the viewer's status goes out separately through
+    // WriteGetObjectResponse. So these tests read it from the call the mocked S3 client recorded.
+    beforeEach(() => {
+      s3Mock.resetHistory();
+    });
+
+    it('should answer 403 when a mod_shib user is logged in but not authorized', async () => {
+      await handler(forbiddenEvent);
+      const [response] = s3Mock.commandCalls(WriteGetObjectResponseCommand);
+      expect(response.args[0].input.StatusCode).toEqual(403);
+    });
+
+    it('should answer 401 when there is no mod_shib login session', async () => {
+      await handler(restrictedAnonymousEvent);
+      const [response] = s3Mock.commandCalls(WriteGetObjectResponseCommand);
+      expect(response.args[0].input.StatusCode).toEqual(401);
+    });
   });
 });
