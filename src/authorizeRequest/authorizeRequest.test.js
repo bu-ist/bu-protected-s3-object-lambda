@@ -55,6 +55,8 @@ ddbMock.on(GetCommand, {
 });
 
 describe('authorizeRequest', () => {
+  // mod_shib sends Eppn on every request, an empty one indicates there is no login session.
+
   // Entire community group tests.
   it('should return true if the user is granted access through the entire community group', async () => {
     const userRequest = {
@@ -72,6 +74,7 @@ describe('authorizeRequest', () => {
     const userRequest = {
       url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/entire-bu-community/image.jpg',
       headers: {
+        Eppn: '',
         'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
       },
     };
@@ -114,6 +117,7 @@ describe('authorizeRequest', () => {
     const userRequest = {
       url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/somegroup/image.jpg',
       headers: {
+        Eppn: '',
         'X-Real-Ip': '10.0.0.30',
         'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
       },
@@ -126,6 +130,7 @@ describe('authorizeRequest', () => {
     const userRequest = {
       url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/somegroup/image.jpg',
       headers: {
+        Eppn: '',
         'X-Real-Ip': '127.0.0.1',
         'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
       },
@@ -138,6 +143,7 @@ describe('authorizeRequest', () => {
     const userRequest = {
       url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/othergroup/image.jpg',
       headers: {
+        Eppn: '',
         'X-Real-Ip': '10.0.0.30',
         'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
       },
@@ -150,6 +156,7 @@ describe('authorizeRequest', () => {
     const userRequest = {
       url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/2023/08/image.jpg',
       headers: {
+        Eppn: '',
         'X-Real-Ip': '127.0.0.1',
         'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
       },
@@ -178,11 +185,13 @@ describe('authorizeRequest', () => {
     expect(result).toBe(true);
   });
 
-  // Check that gravityforms files are protected by a login session, that is it has no EPPN header.
+  // Check that gravityforms files are protected by a login session,
+  // and should return false if there is no logged in user (i.e., Eppn is empty).
   it('should return false if the request is for a gravityforms file and there is no logged in user', async () => {
     const userRequest = {
       url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/gravity_forms/somefile.json',
       headers: {
+        Eppn: '',
         'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
       },
     };

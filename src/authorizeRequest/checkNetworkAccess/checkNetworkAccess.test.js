@@ -13,32 +13,33 @@ const testRanges = {
 };
 
 describe('checkNetworkAccess', () => {
+  // mod_shib sends Eppn on every request, an empty one indicates there is no login session.
   it('should return true if the user network IP address is in the first allowed range from campus1', () => {
-    const headers = { 'X-Real-Ip': '10.0.0.10' };
+    const headers = { Eppn: '', 'X-Real-Ip': '10.0.0.10' };
     const rules = { ranges: ['campus1'] };
     expect(checkNetworkAccess(rules, headers, testRanges)).toBe(true);
   });
 
   it('should return true if the user network IP address is in the second allowed range from campus1', () => {
-    const headers = { 'X-Real-Ip': '10.0.1.40' };
+    const headers = { Eppn: '', 'X-Real-Ip': '10.0.1.40' };
     const rules = { ranges: ['campus1'] };
     expect(checkNetworkAccess(rules, headers, testRanges)).toBe(true);
   });
 
   it('should return false if the user network IP address is not in the allowed ranges for campus1', () => {
-    const headers = { 'X-Real-Ip': '11.0.0.1' };
+    const headers = { Eppn: '', 'X-Real-Ip': '11.0.0.1' };
     const rules = { ranges: ['campus1'] };
     expect(checkNetworkAccess(rules, headers, testRanges)).toBe(false);
   });
 
   it('should return true if the user network IP address is in the allowed ranges for campus2', () => {
-    const headers = { 'X-Real-Ip': '10.1.0.5' };
+    const headers = { Eppn: '', 'X-Real-Ip': '10.1.0.5' };
     const rules = { ranges: ['campus1', 'campus2'] };
     expect(checkNetworkAccess(rules, headers, testRanges)).toBe(true);
   });
 
   it('should return false if the user network IP address is not in the allowed ranges for campus2', () => {
-    const headers = { 'X-Real-Ip': '11.0.30.30' };
+    const headers = { Eppn: '', 'X-Real-Ip': '11.0.30.30' };
     const rules = { ranges: ['campus2'] };
     expect(checkNetworkAccess(rules, headers, testRanges)).toBe(false);
   });
