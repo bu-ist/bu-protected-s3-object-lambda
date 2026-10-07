@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { checkUserAccess } from './checkUserAccess.js';
+import { getIdentity } from './getIdentity.js';
 
 // Setup an example rules object.
 const exampleUserRules = {
@@ -16,7 +17,7 @@ describe('checkUserAccess', () => {
       'Primary-Affiliation': '',
       Entitlement: [],
     };
-    expect(checkUserAccess(exampleUserRules, headers)).toBe(false);
+    expect(checkUserAccess(exampleUserRules, getIdentity(headers))).toBe(false);
   });
 
   it('should return false if the user attibutes dont match the rules', () => {
@@ -25,7 +26,7 @@ describe('checkUserAccess', () => {
       'Primary-Affiliation': 'faculty',
       Entitlement: ['not-an-entitlement', 'notentitlement2'],
     };
-    expect(checkUserAccess(exampleUserRules, headers)).toBe(false);
+    expect(checkUserAccess(exampleUserRules, getIdentity(headers))).toBe(false);
   });
 
   it('should return true if the user is in the list of users', () => {
@@ -34,7 +35,7 @@ describe('checkUserAccess', () => {
       'Primary-Affiliation': '',
       Entitlement: [],
     };
-    expect(checkUserAccess(exampleUserRules, headers)).toBe(true);
+    expect(checkUserAccess(exampleUserRules, getIdentity(headers))).toBe(true);
   });
 
   it('should return true if the user is in the list of affiliations', () => {
@@ -43,7 +44,7 @@ describe('checkUserAccess', () => {
       'Primary-Affiliation': 'staff',
       Entitlement: [],
     };
-    expect(checkUserAccess(exampleUserRules, headers)).toBe(true);
+    expect(checkUserAccess(exampleUserRules, getIdentity(headers))).toBe(true);
   });
 
   it('should return true if the user has an entitlement', () => {
@@ -52,7 +53,7 @@ describe('checkUserAccess', () => {
       'Primary-Affiliation': 'student',
       Entitlement: ['https://iam.bu.edu/entitlements/some-entitlement'],
     };
-    expect(checkUserAccess(exampleUserRules, headers)).toBe(true);
+    expect(checkUserAccess(exampleUserRules, getIdentity(headers))).toBe(true);
   });
 
   it('should return true if the user is an admin', () => {
@@ -61,7 +62,7 @@ describe('checkUserAccess', () => {
       'Primary-Affiliation': 'faculty',
       Entitlement: [],
     };
-    expect(checkUserAccess(exampleUserRules, headers)).toBe(true);
+    expect(checkUserAccess(exampleUserRules, getIdentity(headers))).toBe(true);
   });
 
   it('should return false if the userName is only whitespace', () => {
@@ -70,7 +71,7 @@ describe('checkUserAccess', () => {
       'Primary-Affiliation': 'staff',
       Entitlement: ['https://iam.bu.edu/entitlements/some-entitlement'],
     };
-    expect(checkUserAccess(exampleUserRules, headers)).toBe(false);
+    expect(checkUserAccess(exampleUserRules, getIdentity(headers))).toBe(false);
   });
 
   it('should return false if eppn is just the domain', () => {
@@ -79,6 +80,6 @@ describe('checkUserAccess', () => {
       'Primary-Affiliation': 'staff',
       Entitlement: ['https://iam.bu.edu/entitlements/some-entitlement'],
     };
-    expect(checkUserAccess(exampleUserRules, headers)).toBe(false);
+    expect(checkUserAccess(exampleUserRules, getIdentity(headers))).toBe(false);
   });
 });

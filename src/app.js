@@ -4,6 +4,7 @@ import { S3 } from '@aws-sdk/client-s3';
 
 import { authorizeRequest } from './authorizeRequest/authorizeRequest.js';
 import { getOrCreateObject } from './getOrCreateObject/getOrCreateObject.js';
+import { getIdentity } from './authorizeRequest/getIdentity.js';
 import { getProtectedSites } from './authorizeRequest/getProtectedSites.js';
 import { getRangesSSM } from './authorizeRequest/getRangesSSM.js';
 
@@ -87,7 +88,7 @@ export async function handler(event) {
 
     // Check for a valid login; if there is one return a forbidden message,
     // because they are logged in but not authorized.
-    if (userRequest.headers.Eppn) {
+    if (getIdentity(userRequest.headers).eppn) {
       params.StatusCode = 403;
       params.ErrorMessage = '403 Forbidden, you are logged in but not authorized to access this resource.';
       await s3.writeGetObjectResponse(params);
