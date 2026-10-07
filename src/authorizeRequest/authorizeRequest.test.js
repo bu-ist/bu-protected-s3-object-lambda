@@ -95,9 +95,77 @@ describe('authorizeRequest', () => {
     expect(result).toBe(true);
   });
 
+  it('should return false if a logged in user matches no rule from off campus', async () => {
+    // The address is set off campus so the group's network rule cannot grant access instead.
+    const userRequest = {
+      url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/somegroup/image.jpg',
+      headers: {
+        Eppn: 'someone@bu.edu',
+        'X-Real-Ip': '11.0.0.1',
+        'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
+      },
+    };
+    const result = await authorizeRequest(userRequest, null, testRanges);
+    expect(result).toBe(false);
+  });
+
+  // BU's IdP may scope an eppn to bu.edu or alum.bu.edu. Everything after the @ is removed, so an
+  // alum.bu.edu principal matches the bare user name. bu-access-control strips only @bu.edu.
+  it('should return true for a listed user name scoped to alum.bu.edu', async () => {
+    const userRequest = {
+      url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/somegroup/image.jpg',
+      headers: {
+        Eppn: 'user2@alum.bu.edu',
+        'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
+      },
+    };
+    const result = await authorizeRequest(userRequest, null, testRanges);
+    expect(result).toBe(true);
+  });
+
   // Affiliation tests.
+  it('should return true if the user is granted access by primary affiliation', async () => {
+    const userRequest = {
+      url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/somegroup/image.jpg',
+      headers: {
+        Eppn: 'someone@bu.edu',
+        'Primary-Affiliation': 'staff',
+        'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
+      },
+    };
+    const result = await authorizeRequest(userRequest, null, testRanges);
+    expect(result).toBe(true);
+  });
 
   // Entitlement tests.
+  it('should return true if the user is granted access by entitlement', async () => {
+    const userRequest = {
+      url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/somegroup/image.jpg',
+      headers: {
+        Eppn: 'someone@bu.edu',
+        // mod_shib joins multiple values with semicolons.
+        Entitlement: 'https://iam.bu.edu/member/ist;https://iam.bu.edu/reg/college/com',
+        'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
+      },
+    };
+    const result = await authorizeRequest(userRequest, null, testRanges);
+    expect(result).toBe(true);
+  });
+
+  // Known flaw, kept as current behavior until it is fixed on its own: the header is compared as
+  // a string, so .../college/community matches a grant of .../college/com.
+  it('currently returns true for an entitlement that only contains a granted one', async () => {
+    const userRequest = {
+      url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/somegroup/image.jpg',
+      headers: {
+        Eppn: 'someone@bu.edu',
+        Entitlement: 'https://iam.bu.edu/reg/college/community',
+        'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
+      },
+    };
+    const result = await authorizeRequest(userRequest, null, testRanges);
+    expect(result).toBe(true);
+  });
 
   // Add a test for a root site vs a sub site.
   it('should return true if the user is granted access by user name for the root site', async () => {
