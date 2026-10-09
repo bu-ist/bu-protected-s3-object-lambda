@@ -16,6 +16,14 @@ process.env.DYNAMODB_TABLE = 'test-table';
 process.env.RANGES_SSM_PARAMETER_NAME = 'test-parameter';
 process.env.ORIGINAL_BUCKET = 'test-bucket';
 
+// Encodes attributes the way the edge builds its user-details header: the session token, with the
+// IdP's attributes under auth-token.user, as base64 JSON. Every attribute is a list.
+function encodeUserDetails(attributes) {
+  const token = { 'auth-token': { user: attributes } };
+
+  return Buffer.from(JSON.stringify(token)).toString('base64');
+}
+
 // Mock the ddb client.
 ddbMock.on(GetCommand, {
   Key: { PK: 'PROTECTED_SITES' },
@@ -131,6 +139,55 @@ const restrictedAnonymousEvent = {
   },
 };
 
+// Requests through the CloudFront edge SP reach the lambda through the container, which removes
+// Eppn. The edge marks each one authenticated or not, and sends the identity in user-details.
+const edgeForbiddenEvent = {
+  userRequest: {
+    url: 'https://example-1111.s3-object-lambda.us-east-1.amazonaws.com/protected/files/01/example.jpg',
+    headers: {
+      Authenticated: 'true',
+      'User-Details': encodeUserDetails({ eduPersonPrincipalName: ['valid-but-unauthorized@bu.edu'] }),
+      'X-Forwarded-Host': 'example.host.bu.edu',
+    },
+  },
+  getObjectContext: {
+    outputRoute: 'test',
+    outputToken: 'test',
+  },
+};
+
+const edgeAnonymousEvent = {
+  userRequest: {
+    url: 'https://example-1111.s3-object-lambda.us-east-1.amazonaws.com/protected/files/01/example.jpg',
+    headers: {
+      Authenticated: 'false',
+      'X-Forwarded-Host': 'example.host.bu.edu',
+    },
+  },
+  getObjectContext: {
+    outputRoute: 'test',
+    outputToken: 'test',
+  },
+};
+
+// On a mod_shib host the edge's header names could have been sent by the viewer, so they are
+// ignored and this request is anonymous.
+const edgeHeadersOnModShibEvent = {
+  userRequest: {
+    url: 'https://example-1111.s3-object-lambda.us-east-1.amazonaws.com/protected/files/01/example.jpg',
+    headers: {
+      Eppn: '',
+      Authenticated: 'true',
+      'User-Details': encodeUserDetails({ eduPersonPrincipalName: ['valid-but-unauthorized@bu.edu'] }),
+      'X-Forwarded-Host': 'example.host.bu.edu',
+    },
+  },
+  getObjectContext: {
+    outputRoute: 'test',
+    outputToken: 'test',
+  },
+};
+
 describe('handler', () => {
   it('should return a 200 response for public media request', async () => {
     const result = await handler(publicMediaEvent);
@@ -173,6 +230,24 @@ describe('handler', () => {
 
     it('should answer 401 when there is no mod_shib login session', async () => {
       await handler(restrictedAnonymousEvent);
+      const [response] = s3Mock.commandCalls(WriteGetObjectResponseCommand);
+      expect(response.args[0].input.StatusCode).toEqual(401);
+    });
+
+    it('should answer 403 when an edge user is logged in but not authorized', async () => {
+      await handler(edgeForbiddenEvent);
+      const [response] = s3Mock.commandCalls(WriteGetObjectResponseCommand);
+      expect(response.args[0].input.StatusCode).toEqual(403);
+    });
+
+    it('should answer 401 when the edge did not authenticate the request', async () => {
+      await handler(edgeAnonymousEvent);
+      const [response] = s3Mock.commandCalls(WriteGetObjectResponseCommand);
+      expect(response.args[0].input.StatusCode).toEqual(401);
+    });
+
+    it('should answer 401 when edge headers arrive on an anonymous mod_shib request', async () => {
+      await handler(edgeHeadersOnModShibEvent);
       const [response] = s3Mock.commandCalls(WriteGetObjectResponseCommand);
       expect(response.args[0].input.StatusCode).toEqual(401);
     });
