@@ -43,4 +43,31 @@ describe('checkNetworkAccess', () => {
     const rules = { ranges: ['campus2'] };
     expect(checkNetworkAccess(rules, headers, testRanges)).toBe(false);
   });
+
+  // CloudFront edge SP tests. These requests have no Eppn header, and the edge sends the client
+  // address it observed as X-Cf-Client-Ip.
+  it('should use the edge address for an edge request', () => {
+    const headers = { Authenticated: 'false', 'X-Cf-Client-Ip': '10.0.0.10' };
+    const rules = { ranges: ['campus1'] };
+    expect(checkNetworkAccess(rules, headers, testRanges)).toBe(true);
+  });
+
+  // On a mod_shib host the edge's header names could have been sent by the viewer, so the edge
+  // address is ignored there and X-Real-Ip is used, as before.
+  it('should ignore the edge address on a mod_shib request', () => {
+    const headers = { Eppn: '', 'X-Cf-Client-Ip': '10.0.0.10', 'X-Real-Ip': '11.0.0.1' };
+    const rules = { ranges: ['campus1'] };
+    expect(checkNetworkAccess(rules, headers, testRanges)).toBe(false);
+  });
+
+  // Network ranges are IPv4. The edge percent-encodes its value, so an IPv6 address arrives with
+  // %3A for each colon, and matches no range.
+  it('should deny an IPv6 edge address', () => {
+    const headers = {
+      Authenticated: 'false',
+      'X-Cf-Client-Ip': encodeURIComponent('2601:197:500:940:851f:f58d:8024:2a1e'),
+    };
+    const rules = { ranges: ['campus1'] };
+    expect(checkNetworkAccess(rules, headers, testRanges)).toBe(false);
+  });
 });

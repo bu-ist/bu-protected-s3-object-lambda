@@ -349,6 +349,19 @@ describe('authorizeRequest', () => {
     expect(result).toBe(false);
   });
 
+  it('should return true if an anonymous edge request is granted access by network address', async () => {
+    const userRequest = {
+      url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/somegroup/image.jpg',
+      headers: {
+        Authenticated: 'false',
+        'X-Cf-Client-Ip': '10.0.0.30',
+        'X-Forwarded-Host': 'example.host.bu.edu',
+      },
+    };
+    const result = await authorizeRequest(userRequest, null, testRanges);
+    expect(result).toBe(true);
+  });
+
   // On a mod_shib host the edge's header names could have been sent by the viewer, so they are
   // ignored and the request is anonymous.
   it('should return false for edge headers on an anonymous mod_shib request', async () => {

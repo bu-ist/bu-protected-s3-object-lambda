@@ -68,4 +68,4 @@ function getIdentity(headers) {
   };
 }
 
-export { getIdentity };
+export { getIdentity, isBehindModShib };
