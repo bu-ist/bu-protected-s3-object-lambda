@@ -5,10 +5,18 @@ import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
 const ddbMock = mockClient(DynamoDBDocumentClient);
 
 // eslint-disable-next-line import/first
-import { authorizeRequest } from './authorizeRequest';
+import { authorizeRequest } from './authorizeRequest.js';
 
 // Table name is not relevant for these tests, but has to exist for the mocked ddb client.
 process.env.DYNAMODB_TABLE = 'test-table';
+
+// Encodes attributes the way the edge builds its user-details header: the session token, with the
+// IdP's attributes under auth-token.user, as base64 JSON. Every attribute is a list.
+function encodeUserDetails(attributes) {
+  const token = { 'auth-token': { user: attributes } };
+
+  return Buffer.from(JSON.stringify(token)).toString('base64');
+}
 
 const testRanges = {
   campus1: [
@@ -55,6 +63,8 @@ ddbMock.on(GetCommand, {
 });
 
 describe('authorizeRequest', () => {
+  // mod_shib sends Eppn on every request, an empty one indicates there is no login session.
+
   // Entire community group tests.
   it('should return true if the user is granted access through the entire community group', async () => {
     const userRequest = {
@@ -72,6 +82,7 @@ describe('authorizeRequest', () => {
     const userRequest = {
       url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/entire-bu-community/image.jpg',
       headers: {
+        Eppn: '',
         'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
       },
     };
@@ -92,9 +103,77 @@ describe('authorizeRequest', () => {
     expect(result).toBe(true);
   });
 
+  it('should return false if a logged in user matches no rule from off campus', async () => {
+    // The address is set off campus so the group's network rule cannot grant access instead.
+    const userRequest = {
+      url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/somegroup/image.jpg',
+      headers: {
+        Eppn: 'someone@bu.edu',
+        'X-Real-Ip': '11.0.0.1',
+        'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
+      },
+    };
+    const result = await authorizeRequest(userRequest, null, testRanges);
+    expect(result).toBe(false);
+  });
+
+  // BU's IdP may scope an eppn to bu.edu or alum.bu.edu. Everything after the @ is removed, so an
+  // alum.bu.edu principal matches the bare user name. bu-access-control strips only @bu.edu.
+  it('should return true for a listed user name scoped to alum.bu.edu', async () => {
+    const userRequest = {
+      url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/somegroup/image.jpg',
+      headers: {
+        Eppn: 'user2@alum.bu.edu',
+        'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
+      },
+    };
+    const result = await authorizeRequest(userRequest, null, testRanges);
+    expect(result).toBe(true);
+  });
+
   // Affiliation tests.
+  it('should return true if the user is granted access by primary affiliation', async () => {
+    const userRequest = {
+      url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/somegroup/image.jpg',
+      headers: {
+        Eppn: 'someone@bu.edu',
+        'Primary-Affiliation': 'staff',
+        'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
+      },
+    };
+    const result = await authorizeRequest(userRequest, null, testRanges);
+    expect(result).toBe(true);
+  });
 
   // Entitlement tests.
+  it('should return true if the user is granted access by entitlement', async () => {
+    const userRequest = {
+      url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/somegroup/image.jpg',
+      headers: {
+        Eppn: 'someone@bu.edu',
+        // mod_shib joins multiple values with semicolons.
+        Entitlement: 'https://iam.bu.edu/member/ist;https://iam.bu.edu/reg/college/com',
+        'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
+      },
+    };
+    const result = await authorizeRequest(userRequest, null, testRanges);
+    expect(result).toBe(true);
+  });
+
+  // Known flaw, kept as current behavior until it is fixed on its own: the header is compared as
+  // a string, so .../college/community matches a grant of .../college/com.
+  it('currently returns true for an entitlement that only contains a granted one', async () => {
+    const userRequest = {
+      url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/somegroup/image.jpg',
+      headers: {
+        Eppn: 'someone@bu.edu',
+        Entitlement: 'https://iam.bu.edu/reg/college/community',
+        'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
+      },
+    };
+    const result = await authorizeRequest(userRequest, null, testRanges);
+    expect(result).toBe(true);
+  });
 
   // Add a test for a root site vs a sub site.
   it('should return true if the user is granted access by user name for the root site', async () => {
@@ -114,6 +193,7 @@ describe('authorizeRequest', () => {
     const userRequest = {
       url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/somegroup/image.jpg',
       headers: {
+        Eppn: '',
         'X-Real-Ip': '10.0.0.30',
         'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
       },
@@ -126,6 +206,7 @@ describe('authorizeRequest', () => {
     const userRequest = {
       url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/somegroup/image.jpg',
       headers: {
+        Eppn: '',
         'X-Real-Ip': '127.0.0.1',
         'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
       },
@@ -138,6 +219,7 @@ describe('authorizeRequest', () => {
     const userRequest = {
       url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/othergroup/image.jpg',
       headers: {
+        Eppn: '',
         'X-Real-Ip': '10.0.0.30',
         'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
       },
@@ -150,6 +232,7 @@ describe('authorizeRequest', () => {
     const userRequest = {
       url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/2023/08/image.jpg',
       headers: {
+        Eppn: '',
         'X-Real-Ip': '127.0.0.1',
         'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
       },
@@ -178,11 +261,13 @@ describe('authorizeRequest', () => {
     expect(result).toBe(true);
   });
 
-  // Check that gravityforms files are protected by a login session, that is it has no EPPN header.
+  // Check that gravityforms files are protected by a login session,
+  // and should return false if there is no logged in user (i.e., Eppn is empty).
   it('should return false if the request is for a gravityforms file and there is no logged in user', async () => {
     const userRequest = {
       url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/gravity_forms/somefile.json',
       headers: {
+        Eppn: '',
         'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
       },
     };
@@ -200,5 +285,96 @@ describe('authorizeRequest', () => {
     };
     const result = await authorizeRequest(userRequest, null, testRanges);
     expect(result).toBe(true);
+  });
+
+  // CloudFront edge SP tests. These requests reach the lambda through the container, which removes
+  // Eppn, so identity comes from the edge's user-details payload.
+  it('should return true if an edge user is granted access by user name', async () => {
+    const userRequest = {
+      url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/somegroup/image.jpg',
+      headers: {
+        Authenticated: 'true',
+        'User-Details': encodeUserDetails({ eduPersonPrincipalName: ['user2@bu.edu'] }),
+        'X-Forwarded-Host': 'example.host.bu.edu',
+      },
+    };
+    const result = await authorizeRequest(userRequest, null, testRanges);
+    expect(result).toBe(true);
+  });
+
+  it('should return true if an edge user is granted access by primary affiliation', async () => {
+    const userRequest = {
+      url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/somegroup/image.jpg',
+      headers: {
+        Authenticated: 'true',
+        'User-Details': encodeUserDetails({
+          eduPersonPrincipalName: ['someone@bu.edu'],
+          eduPersonPrimaryAffiliation: ['staff'],
+        }),
+        'X-Forwarded-Host': 'example.host.bu.edu',
+      },
+    };
+    const result = await authorizeRequest(userRequest, null, testRanges);
+    expect(result).toBe(true);
+  });
+
+  it('should return true if an edge user is granted access by entitlement', async () => {
+    const userRequest = {
+      url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/somegroup/image.jpg',
+      headers: {
+        Authenticated: 'true',
+        'User-Details': encodeUserDetails({
+          eduPersonPrincipalName: ['someone@bu.edu'],
+          eduPersonEntitlement: ['https://iam.bu.edu/member/ist', 'https://iam.bu.edu/reg/college/com'],
+        }),
+        'X-Forwarded-Host': 'example.host.bu.edu',
+      },
+    };
+    const result = await authorizeRequest(userRequest, null, testRanges);
+    expect(result).toBe(true);
+  });
+
+  // The address is set off campus so the group's network rule cannot grant access instead.
+  it('should return false if a logged in edge user matches no rule from off campus', async () => {
+    const userRequest = {
+      url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/somegroup/image.jpg',
+      headers: {
+        Authenticated: 'true',
+        'User-Details': encodeUserDetails({ eduPersonPrincipalName: ['someone@bu.edu'] }),
+        'X-Cf-Client-Ip': '11.0.0.1',
+        'X-Forwarded-Host': 'example.host.bu.edu',
+      },
+    };
+    const result = await authorizeRequest(userRequest, null, testRanges);
+    expect(result).toBe(false);
+  });
+
+  it('should return true if an anonymous edge request is granted access by network address', async () => {
+    const userRequest = {
+      url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/somegroup/image.jpg',
+      headers: {
+        Authenticated: 'false',
+        'X-Cf-Client-Ip': '10.0.0.30',
+        'X-Forwarded-Host': 'example.host.bu.edu',
+      },
+    };
+    const result = await authorizeRequest(userRequest, null, testRanges);
+    expect(result).toBe(true);
+  });
+
+  // On a mod_shib host the edge's header names could have been sent by the viewer, so they are
+  // ignored and the request is anonymous.
+  it('should return false for edge headers on an anonymous mod_shib request', async () => {
+    const userRequest = {
+      url: 'https://example-access-point.s3-object-lambda.us-east-1.amazonaws.com/somesite/files/__restricted/somegroup/image.jpg',
+      headers: {
+        Eppn: '',
+        Authenticated: 'true',
+        'User-Details': encodeUserDetails({ eduPersonPrincipalName: ['user2@bu.edu'] }),
+        'X-Forwarded-Host': 'example.host.bu.edu, example.host.bu.edu',
+      },
+    };
+    const result = await authorizeRequest(userRequest, null, testRanges);
+    expect(result).toBe(false);
   });
 });

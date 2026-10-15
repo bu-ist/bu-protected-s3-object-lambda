@@ -3,6 +3,7 @@ import { DynamoDB } from '@aws-sdk/client-dynamodb';
 
 import { checkUserAccess } from './checkUserAccess.js';
 import { checkNetworkAccess } from './checkNetworkAccess/checkNetworkAccess.js';
+import { getIdentity } from './getIdentity.js';
 
 async function authorizeRequest(userRequest, siteRule, networkRanges) {
   // Check if the user is authorized to access the object.
@@ -17,12 +18,12 @@ async function authorizeRequest(userRequest, siteRule, networkRanges) {
   }));
 
   const {
-    Eppn: eppn = '',
     'X-Forwarded-Host': forwardedHost = '',
   } = headers;
 
-  // Get the userName as the unscoped eppn ( e.g. the email without the @domain).
-  const userName = eppn.split('@')[0];
+  // Get the user's identity from the request headers.
+  const identity = getIdentity(headers);
+  const { userName } = identity;
 
   // Get the domain from the forwarded host, is this going to be reliable?
   const domain = forwardedHost.split(', ')[0];
@@ -98,7 +99,7 @@ async function authorizeRequest(userRequest, siteRule, networkRanges) {
   const rules = JSON.parse(Item.rules);
 
   // Apply the rules.
-  const userAllowed = checkUserAccess(rules, headers);
+  const userAllowed = checkUserAccess(rules, identity);
   const networkAllowed = checkNetworkAccess(rules, headers, networkRanges);
 
   // Check for a satisfy all flag in the rules, default to false.

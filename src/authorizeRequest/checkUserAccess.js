@@ -1,13 +1,10 @@
-function checkUserAccess(rules, headers) {
-  // Destructure the header object to get the shib attributes, with defaults.
+function checkUserAccess(rules, identity) {
+  // The identity is resolved from the request headers by getIdentity.
   const {
-    Eppn: eppn = '',
-    'Primary-Affiliation': userAffiliation = '',
-    Entitlement: userEntitlements = [],
-  } = headers;
-
-  // Get the userName as the unscoped eppn ( e.g. the email without the @domain).
-  const userName = eppn.split('@')[0];
+    userName,
+    affiliation: userAffiliation,
+    entitlements: userEntitlements,
+  } = identity;
 
   // If the userName is empty, restrict access immediately.
   if (userName.trim() === '') {
