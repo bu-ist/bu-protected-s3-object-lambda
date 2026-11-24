@@ -39,7 +39,21 @@ async function resizeAndSave(data, originalPath, sizeMatch, crop) {
   let resized;
   let resizedBuffer;
   try {
-    resized = await sharp(imageBuffer, { animated: true }).resize({
+    const image = sharp(imageBuffer, { animated: true });
+
+    // Camera JPEGs often store unrotated pixels plus an EXIF Orientation tag, and WordPress
+    // names and sizes sub-sizes for the oriented image. rotate() with no angle applies the tag
+    // before the resize and crop, and resets it so browsers don't rotate the output again.
+    // It has to come before resize(): after it, sharp keeps the original tag whenever JPEG
+    // shrink-on-load reloads the input. WordPress applies the tag to JPEGs only
+    // (WP_Image_Editor::maybe_exif_rotate()), so other formats, and JPEGs with no rotation or
+    // flip to apply, keep their pipeline unchanged.
+    const { format, orientation } = await image.metadata();
+    if (format === 'jpeg' && orientation > 1) {
+      image.rotate();
+    }
+
+    resized = await image.resize({
       width,
       height,
       ...options,
