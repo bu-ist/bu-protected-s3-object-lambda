@@ -141,13 +141,15 @@ describe('resizeAndSave', () => {
       .toBe('rendered_media/www.bu.edu/somesite/files/01/example-150x150*crop-top.gif');
   });
 
-  it('should apply the EXIF orientation before resizing', async () => {
-    sharpPipeline.metadata.mockResolvedValueOnce({ orientation: 6 });
+  const jpegSizeMatch = ['-150x150.jpg', '150', '150', 'jpg'];
+
+  it('should apply a JPEG\'s EXIF orientation before resizing', async () => {
+    sharpPipeline.metadata.mockResolvedValueOnce({ format: 'jpeg', orientation: 6 });
 
     await resizeAndSave(
       s3Response('original-image-bytes'),
-      '/www.bu.edu/somesite/files/01/example.gif',
-      sizeMatch,
+      '/www.bu.edu/somesite/files/01/example.jpg',
+      jpegSizeMatch,
       false,
     );
 
@@ -159,16 +161,18 @@ describe('resizeAndSave', () => {
   });
 
   it.each([
-    ['no EXIF orientation', {}],
-    ['EXIF orientation 1', { orientation: 1 }],
-    ['an animated image', { orientation: 6, pages: 3 }],
+    ['a JPEG with no EXIF orientation', { format: 'jpeg' }],
+    ['a JPEG with EXIF orientation 1', { format: 'jpeg', orientation: 1 }],
+    ['a WebP with EXIF orientation 6', { format: 'webp', orientation: 6 }],
+    ['a PNG with EXIF orientation 6', { format: 'png', orientation: 6 }],
+    ['an animated WebP with EXIF orientation 6', { format: 'webp', orientation: 6, pages: 3 }],
   ])('should not rotate %s', async (_, metadata) => {
     sharpPipeline.metadata.mockResolvedValueOnce(metadata);
 
     await resizeAndSave(
       s3Response('original-image-bytes'),
-      '/www.bu.edu/somesite/files/01/example.gif',
-      sizeMatch,
+      '/www.bu.edu/somesite/files/01/example.jpg',
+      jpegSizeMatch,
       false,
     );
 

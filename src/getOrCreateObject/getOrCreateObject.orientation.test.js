@@ -21,26 +21,45 @@ vi.hoisted(() => {
 // mirrored or wrongly cropped output differs from the reference by far more than JPEG noise.
 const QUADRANT_COLORS = [[220, 30, 30], [30, 200, 60], [30, 60, 220], [240, 220, 40]];
 
+const quadrantColor = (x, y, width, height) => QUADRANT_COLORS[
+  (y < height / 2 ? 0 : 2) + (x < width / 2 ? 0 : 1)
+];
+
 function quadrants(width, height) {
   const data = Buffer.alloc(width * height * 3);
   for (let y = 0; y < height; y += 1) {
     for (let x = 0; x < width; x += 1) {
-      const quadrant = (y < height / 2 ? 0 : 2) + (x < width / 2 ? 0 : 1);
-      data.set(QUADRANT_COLORS[quadrant], (y * width + x) * 3);
+      data.set(quadrantColor(x, y, width, height), (y * width + x) * 3);
     }
   }
   return sharp(data, { raw: { width, height, channels: 3 } });
 }
 
-// Clockwise rotation from the displayed image to the stored pixels, per EXIF orientation.
-const STORED_ROTATION = {
-  1: 0, 3: 180, 6: 270, 8: 90,
+// Where a stored pixel (x, y) of a w x h stored image appears once displayed, per EXIF orientation.
+// 2, 4, 5 and 7 mirror the image; 5 to 8 swap its width and height.
+const DISPLAYED_AT = {
+  1: (x, y) => [x, y],
+  2: (x, y, w) => [w - 1 - x, y],
+  3: (x, y, w, h) => [w - 1 - x, h - 1 - y],
+  4: (x, y, w, h) => [x, h - 1 - y],
+  5: (x, y) => [y, x],
+  6: (x, y, w, h) => [h - 1 - y, x],
+  7: (x, y, w, h) => [h - 1 - y, w - 1 - x],
+  8: (x, y, w) => [y, w - 1 - x],
 };
 
-// A camera JPEG: the pixels as the sensor stored them, plus the EXIF tag that orients them.
+// A camera JPEG that displays as quadrants(width, height): the pixels as the sensor stored them,
+// plus the EXIF tag that orients them.
 async function cameraJpeg(orientation, width, height) {
-  return quadrants(width, height)
-    .rotate(STORED_ROTATION[orientation])
+  const [storedWidth, storedHeight] = orientation > 4 ? [height, width] : [width, height];
+  const data = Buffer.alloc(storedWidth * storedHeight * 3);
+  for (let y = 0; y < storedHeight; y += 1) {
+    for (let x = 0; x < storedWidth; x += 1) {
+      const [displayX, displayY] = DISPLAYED_AT[orientation](x, y, storedWidth, storedHeight);
+      data.set(quadrantColor(displayX, displayY, width, height), (y * storedWidth + x) * 3);
+    }
+  }
+  return sharp(data, { raw: { width: storedWidth, height: storedHeight, channels: 3 } })
     .jpeg()
     .withMetadata({ orientation })
     .toBuffer();
@@ -103,7 +122,7 @@ describe('getOrCreateObject with EXIF-oriented originals', () => {
   // The 150x150 and some 445x300 cases make sharp reload the JPEG with shrink-on-load,
   // which is where a rotate() added after resize() leaves the original tag in place.
   const cases = [];
-  [1, 3, 6, 8].forEach((orientation) => {
+  [1, 2, 3, 4, 5, 6, 7, 8].forEach((orientation) => {
     const portrait = orientation > 4;
     const display = portrait ? [1200, 1800] : [1800, 1200];
     cases.push(
@@ -156,12 +175,15 @@ describe('getOrCreateObject with originals that have no orientation to apply', (
     .withMetadata()
     .toBuffer();
 
+  // WordPress applies EXIF orientation to JPEGs only, so a tagged WebP keeps its pixels as stored.
   it.each([
-    ['a JPEG with no EXIF', 'plain.jpg', () => quadrants(900, 600).jpeg().toBuffer(), 'image/jpeg'],
-    ['an orientation 1 JPEG', 'upright.jpg', () => cameraJpeg(1, 900, 600), 'image/jpeg'],
-    ['a PNG', 'graphic.png', () => quadrants(900, 600).png().toBuffer(), 'image/png'],
-  ])('should resize %s exactly as before', async (_, name, makeOriginal, contentType) => {
+    ['a JPEG with no EXIF', 'plain.jpg', () => quadrants(900, 600).jpeg().toBuffer(), 'image/jpeg', undefined],
+    ['an orientation 1 JPEG', 'upright.jpg', () => cameraJpeg(1, 900, 600), 'image/jpeg', 1],
+    ['a PNG', 'graphic.png', () => quadrants(900, 600).png().toBuffer(), 'image/png', undefined],
+    ['an orientation 6 WebP', 'tagged.webp', () => quadrants(900, 600).webp().withMetadata({ orientation: 6 }).toBuffer(), 'image/webp', 6],
+  ])('should resize %s exactly as before', async (_, name, makeOriginal, contentType, orientation) => {
     const original = await makeOriginal();
+    expect((await sharp(original).metadata()).orientation).toBe(orientation);
     serveOriginal(name, original, contentType);
     const base = name.replace(/\.[^.]+$/, '');
     const extension = name.split('.').pop();

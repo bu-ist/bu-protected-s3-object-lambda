@@ -45,11 +45,11 @@ async function resizeAndSave(data, originalPath, sizeMatch, crop) {
     // names and sizes sub-sizes for the oriented image. rotate() with no angle applies the tag
     // before the resize and crop, and resets it so browsers don't rotate the output again.
     // It has to come before resize(): after it, sharp keeps the original tag whenever JPEG
-    // shrink-on-load reloads the input. Images with no rotation or flip to apply keep their
-    // pipeline unchanged. Animated images are skipped because sharp would rotate their
-    // stacked frames as one image.
-    const { orientation, pages = 1 } = await image.metadata();
-    if (orientation > 1 && pages === 1) {
+    // shrink-on-load reloads the input. WordPress applies the tag to JPEGs only
+    // (WP_Image_Editor::maybe_exif_rotate()), so other formats, and JPEGs with no rotation or
+    // flip to apply, keep their pipeline unchanged.
+    const { format, orientation } = await image.metadata();
+    if (format === 'jpeg' && orientation > 1) {
       image.rotate();
     }
 
