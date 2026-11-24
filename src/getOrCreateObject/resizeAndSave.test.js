@@ -20,8 +20,11 @@ vi.hoisted(() => {
 // These tests cover our own fallback logic, not sharp's image processing.
 // getOrCreateObject.test.js still runs the real sharp library against real image bytes.
 const { sharpMock, sharpPipeline } = vi.hoisted(() => {
-  // sharp's resize() and withMetadata() return the pipeline, so that calls can be chained.
+  // sharp's rotate(), resize() and withMetadata() return the pipeline, so calls can be chained.
+  // metadata() reports no EXIF orientation unless a test says otherwise.
   const pipeline = {};
+  pipeline.metadata = vi.fn(async () => ({}));
+  pipeline.rotate = vi.fn(() => pipeline);
   pipeline.resize = vi.fn(() => pipeline);
   pipeline.withMetadata = vi.fn(() => pipeline);
   pipeline.toBuffer = vi.fn(async () => Buffer.from('resized-image-bytes'));
@@ -136,6 +139,41 @@ describe('resizeAndSave', () => {
 
     expect(s3Mock.commandCalls(PutObjectCommand)[0].args[0].input.Key)
       .toBe('rendered_media/www.bu.edu/somesite/files/01/example-150x150*crop-top.gif');
+  });
+
+  it('should apply the EXIF orientation before resizing', async () => {
+    sharpPipeline.metadata.mockResolvedValueOnce({ orientation: 6 });
+
+    await resizeAndSave(
+      s3Response('original-image-bytes'),
+      '/www.bu.edu/somesite/files/01/example.gif',
+      sizeMatch,
+      false,
+    );
+
+    expect(sharpPipeline.rotate).toHaveBeenCalledTimes(1);
+    expect(sharpPipeline.rotate).toHaveBeenCalledWith();
+    // Added after resize(), sharp keeps the original tag when shrink-on-load reloads the JPEG.
+    expect(sharpPipeline.rotate.mock.invocationCallOrder[0])
+      .toBeLessThan(sharpPipeline.resize.mock.invocationCallOrder[0]);
+  });
+
+  it.each([
+    ['no EXIF orientation', {}],
+    ['EXIF orientation 1', { orientation: 1 }],
+    ['an animated image', { orientation: 6, pages: 3 }],
+  ])('should not rotate %s', async (_, metadata) => {
+    sharpPipeline.metadata.mockResolvedValueOnce(metadata);
+
+    await resizeAndSave(
+      s3Response('original-image-bytes'),
+      '/www.bu.edu/somesite/files/01/example.gif',
+      sizeMatch,
+      false,
+    );
+
+    expect(sharpPipeline.rotate).not.toHaveBeenCalled();
+    expect(sharpPipeline.resize).toHaveBeenCalledWith({ width: 150, height: 150 });
   });
 });
 
